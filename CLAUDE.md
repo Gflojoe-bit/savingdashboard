@@ -36,6 +36,7 @@ When starting a chat on a subsystem branch, the first thing to do is read this f
 
 ## Conventions
 
+- Project folder (settings + root URLs) is `config/`. Apps live at the repo root alongside it.
 - App per subsystem: `auth_app/`, `accounts/`, `transactions/`, `goals/`, `dashboard/`, `importer/` (Django reserves `auth` and `import`).
 - Migrations are committed.
 - Keep subsystem branches small and mergeable — rebase on `main` before merging.
