@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Goals</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: system-ui, sans-serif; font-size: 16px; color: #111; background: #fff; padding-bottom: 64px; }
+
+    header { padding: 16px; border-bottom: 1px solid #ccc; display: flex; justify-content: space-between; align-items: center; }
+    header span { font-size: 18px; font-weight: 600; }
+    header a { font-size: 14px; color: #555; text-decoration: none; }
+
+    main { padding: 16px; }
+    h1 { font-size: 22px; font-weight: 700; margin-bottom: 20px; }
+
+    ul { list-style: none; }
+    ul li { border-bottom: 1px solid #eee; }
+    ul li:last-child { border-bottom: none; }
+    ul li a { display: block; padding: 16px 0; text-decoration: none; color: #111; min-height: 44px; }
+
+    .goal-row { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 8px; }
+    .goal-name { font-size: 16px; font-weight: 500; }
+    .goal-amounts { font-size: 13px; color: #666; }
+    progress { width: 100%; height: 8px; accent-color: #111; border-radius: 4px; }
+    .goal-meta { display: flex; justify-content: space-between; margin-top: 6px; font-size: 13px; color: #777; }
+
+    nav { position: fixed; bottom: 0; left: 0; right: 0; display: flex; background: #fff; border-top: 1px solid #ccc; }
+    nav a { flex: 1; text-align: center; padding: 14px 0; font-size: 13px; color: #555; text-decoration: none; min-height: 44px; }
+    nav a.active { font-weight: 700; color: #111; }
+  </style>
+</head>
+<body>
+
+<header>
+  <a href="01-home.html">← Home</a>
+  <span>Goals</span>
+  <span></span>
+</header>
+
+<main>
+  <h1>All goals</h1>
+  <ul>
+    <li>
+      <a href="06-goal-detail.html">
+        <div class="goal-row"><span class="goal-name">Emergency Fund</span><span class="goal-amounts">$3,200 / $5,000</span></div>
+        <progress value="3200" max="5000"></progress>
+        <div class="goal-meta"><span>64% complete</span><span>Due Dec 31, 2026</span></div>
+      </a>
+    </li>
+    <li>
+      <a href="06-goal-detail.html">
+        <div class="goal-row"><span class="goal-name">Vacation</span><span class="goal-amounts">$900 / $2,000</span></div>
+        <progress value="900" max="2000"></progress>
+        <div class="goal-meta"><span>45% complete</span><span>Due Aug 1, 2026</span></div>
+      </a>
+    </li>
+  </ul>
+</main>
+
+<nav>
+  <a href="01-home.html">Home</a>
+  <a href="02-accounts.html">Accounts</a>
+  <a href="04-transactions.html">Transactions</a>
+  <a href="05-goals.html" class="active">Goals</a>
+</nav>
+
+</body>
+</html>
