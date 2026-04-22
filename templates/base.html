@@ -1,0 +1,31 @@
+{% load static %}<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}Savings Dashboard{% endblock %}</title>
+  <link rel="stylesheet" href="{% static 'css/app.css' %}">
+</head>
+<body>
+
+  {% block header %}
+    <header class="page-header">
+      <a href="{% url 'dashboard:home' %}">← Home</a>
+      <span class="page-title">{% block page_title %}{% endblock %}</span>
+      <span></span>
+    </header>
+  {% endblock %}
+
+  <main>
+    {% block content %}{% endblock %}
+  </main>
+
+  <nav class="bottom-nav">
+    <a href="{% url 'dashboard:home' %}" {% if active_tab == 'home' %}class="active"{% endif %}>Home</a>
+    <a href="{% url 'dashboard:accounts' %}" {% if active_tab == 'accounts' %}class="active"{% endif %}>Accounts</a>
+    <a href="{% url 'dashboard:transactions' %}" {% if active_tab == 'transactions' %}class="active"{% endif %}>Transactions</a>
+    <a href="{% url 'dashboard:goals' %}" {% if active_tab == 'goals' %}class="active"{% endif %}>Goals</a>
+  </nav>
+
+</body>
+</html>

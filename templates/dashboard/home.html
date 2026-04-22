@@ -1,0 +1,74 @@
+{% extends 'base.html' %}
+
+{% block title %}Home — Savings Dashboard{% endblock %}
+
+{% block header %}
+  <header class="page-header">
+    <h1 class="app-title">Savings Dashboard</h1>
+    <a href="{% url 'dashboard:settings' %}">Settings</a>
+  </header>
+{% endblock %}
+
+{% block content %}
+  <div class="hero-block">
+    <p>Total savings</p>
+    <div class="hero-number">${{ total_savings }}</div>
+  </div>
+
+  <section>
+    <h2>Savings over time</h2>
+    <div class="chart-placeholder">Savings over time</div>
+  </section>
+
+  <section>
+    <h2>Goals</h2>
+    <ul class="list">
+      {% for goal in goals %}
+        <li class="goal-item">
+          <div class="goal-row">
+            <span>{{ goal.name }}</span>
+            <span>${{ goal.saved }} of ${{ goal.target }}</span>
+          </div>
+          <progress value="{{ goal.saved }}" max="{{ goal.target }}"></progress>
+        </li>
+      {% endfor %}
+    </ul>
+    <a href="{% url 'dashboard:goals' %}" class="view-all">View all goals →</a>
+  </section>
+
+  <section>
+    <h2>Recent transactions</h2>
+    <ul class="list">
+      {% for txn in recent_transactions %}
+        <li>
+          <div class="row">
+            <div class="row-left">
+              <span class="row-main">{{ txn.name }}</span>
+              <span class="row-sub">{{ txn.date }} · {{ txn.account }}</span>
+            </div>
+            <span class="row-right {% if txn.credit %}credit{% endif %}">{{ txn.amount }}</span>
+          </div>
+        </li>
+      {% endfor %}
+    </ul>
+    <a href="{% url 'dashboard:transactions' %}" class="view-all">View all transactions →</a>
+  </section>
+
+  <section>
+    <h2>Accounts</h2>
+    <ul class="list">
+      {% for acct in accounts %}
+        <li>
+          <div class="row">
+            <div class="row-left">
+              <span class="row-main">{{ acct.name }}</span>
+              <span class="row-sub">{{ acct.type }}</span>
+            </div>
+            <span class="row-right">${{ acct.balance }}</span>
+          </div>
+        </li>
+      {% endfor %}
+    </ul>
+    <a href="{% url 'dashboard:accounts' %}" class="view-all">View all accounts →</a>
+  </section>
+{% endblock %}

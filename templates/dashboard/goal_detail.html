@@ -1,0 +1,33 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ goal.name }} — Savings Dashboard{% endblock %}
+{% block page_title %}Goal{% endblock %}
+
+{% block header %}
+  <header class="page-header">
+    <a href="{% url 'dashboard:goals' %}">← Goals</a>
+    <span class="page-title">Goal</span>
+    <span></span>
+  </header>
+{% endblock %}
+
+{% block content %}
+  <div class="acct-header">
+    <h1 style="font-size:24px;margin-bottom:4px">{{ goal.name }}</h1>
+    <div class="type">Target date: {{ goal.due }}</div>
+  </div>
+
+  <div class="stats">
+    <div class="stat"><p>Saved so far</p><div class="val">${{ goal.saved }}</div></div>
+    <div class="stat"><p>Target amount</p><div class="val">${{ goal.target }}</div></div>
+  </div>
+
+  <h2>Progress</h2>
+  <progress class="large" value="{{ goal.saved }}" max="{{ goal.target }}"></progress>
+  <div class="progress-labels">
+    <span>$0</span>
+    <span>${{ goal.target }}</span>
+  </div>
+  <div class="pct">{{ goal.pct }}%</div>
+  <div class="remaining">${{ goal.remaining }} remaining</div>
+{% endblock %}
