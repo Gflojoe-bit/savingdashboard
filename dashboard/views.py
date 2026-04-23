@@ -7,7 +7,9 @@ owning app and the fake_data reference gets swapped for a queryset.
 """
 
 from django.http import Http404
-from django.shortcuts import render
+from django.shortcuts import get_object_or_404, render
+
+from accounts.models import Account
 
 from . import fake_data
 
@@ -20,21 +22,19 @@ def home(request):
         'savings_goal_periods': fake_data.SAVINGS_GOAL_PERIODS,
         'goals': fake_data.GOALS,
         'recent_transactions': fake_data.RECENT_TRANSACTIONS,
-        'accounts': fake_data.ACCOUNTS,
+        'accounts': Account.objects.all(),
     })
 
 
 def accounts(request):
     return render(request, 'dashboard/accounts.html', {
         'active_tab': 'accounts',
-        'accounts': fake_data.ACCOUNTS,
+        'accounts': Account.objects.all(),
     })
 
 
 def account_detail(request, account_id):
-    account = next((a for a in fake_data.ACCOUNTS if a['id'] == account_id), None)
-    if account is None:
-        raise Http404("Account not found")
+    account = get_object_or_404(Account, pk=account_id)
     return render(request, 'dashboard/account_detail.html', {
         'active_tab': 'accounts',
         'account': account,

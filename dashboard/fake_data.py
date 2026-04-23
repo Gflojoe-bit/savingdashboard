@@ -5,11 +5,6 @@ transactions, goals) are still being built. Each subsystem branch will
 replace its slice of this with real querysets.
 """
 
-ACCOUNTS = [
-    {"id": 1, "name": "Checking (Bank A)", "type": "Checking", "balance": "3,200.00"},
-    {"id": 2, "name": "Savings (Bank B)", "type": "Savings",  "balance": "9,200.00"},
-]
-
 # Keyed by account id.
 TRANSACTIONS_BY_ACCOUNT = {
     1: [
