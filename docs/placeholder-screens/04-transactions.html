@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Transactions</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: system-ui, sans-serif; font-size: 16px; color: #111; background: #fff; padding-bottom: 64px; }
+
+    header { padding: 16px; border-bottom: 1px solid #ccc; display: flex; justify-content: space-between; align-items: center; }
+    header span { font-size: 18px; font-weight: 600; }
+    header a { font-size: 14px; color: #555; text-decoration: none; }
+
+    main { padding: 16px; }
+    h1 { font-size: 22px; font-weight: 700; margin-bottom: 20px; }
+
+    .month { margin-bottom: 28px; }
+    .month-label { font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: #777; padding-bottom: 6px; border-bottom: 1px solid #ddd; margin-bottom: 4px; }
+
+    ul { list-style: none; }
+    ul li { border-bottom: 1px solid #eee; }
+    ul li:last-child { border-bottom: none; }
+    .row { display: flex; justify-content: space-between; align-items: center; padding: 14px 0; min-height: 44px; }
+    .row-left { display: flex; flex-direction: column; gap: 2px; }
+    .row-main { font-size: 15px; }
+    .row-sub { font-size: 13px; color: #777; }
+    .row-right { font-size: 15px; font-weight: 600; white-space: nowrap; }
+    .row-right.credit { color: #1c6b34; }
+
+    nav { position: fixed; bottom: 0; left: 0; right: 0; display: flex; background: #fff; border-top: 1px solid #ccc; }
+    nav a { flex: 1; text-align: center; padding: 14px 0; font-size: 13px; color: #555; text-decoration: none; min-height: 44px; }
+    nav a.active { font-weight: 700; color: #111; }
+  </style>
+</head>
+<body>
+
+<header>
+  <a href="01-home.html">← Home</a>
+  <span>Transactions</span>
+  <span></span>
+</header>
+
+<main>
+  <h1>All transactions</h1>
+
+  <div class="month">
+    <div class="month-label">April 2026</div>
+    <ul>
+      <li><div class="row"><div class="row-left"><span class="row-main">Grocery store</span><span class="row-sub">Apr 19 · Checking (Bank A)</span></div><span class="row-right">−$84.00</span></div></li>
+      <li><div class="row"><div class="row-left"><span class="row-main">Paycheck</span><span class="row-sub">Apr 15 · Checking (Bank A)</span></div><span class="row-right credit">+$2,400.00</span></div></li>
+      <li><div class="row"><div class="row-left"><span class="row-main">Rent</span><span class="row-sub">Apr 1 · Checking (Bank A)</span></div><span class="row-right">−$1,200.00</span></div></li>
+    </ul>
+  </div>
+
+  <div class="month">
+    <div class="month-label">March 2026</div>
+    <ul>
+      <li><div class="row"><div class="row-left"><span class="row-main">Grocery store</span><span class="row-sub">Mar 28 · Checking (Bank A)</span></div><span class="row-right">−$61.00</span></div></li>
+      <li><div class="row"><div class="row-left"><span class="row-main">Paycheck</span><span class="row-sub">Mar 15 · Checking (Bank A)</span></div><span class="row-right credit">+$2,400.00</span></div></li>
+      <li><div class="row"><div class="row-left"><span class="row-main">Transfer to Savings</span><span class="row-sub">Mar 15 · Savings (Bank B)</span></div><span class="row-right credit">+$500.00</span></div></li>
+      <li><div class="row"><div class="row-left"><span class="row-main">Rent</span><span class="row-sub">Mar 1 · Checking (Bank A)</span></div><span class="row-right">−$1,200.00</span></div></li>
+    </ul>
+  </div>
+
+</main>
+
+<nav>
+  <a href="01-home.html">Home</a>
+  <a href="02-accounts.html">Accounts</a>
+  <a href="04-transactions.html" class="active">Transactions</a>
+  <a href="05-goals.html">Goals</a>
+</nav>
+
+</body>
+</html>

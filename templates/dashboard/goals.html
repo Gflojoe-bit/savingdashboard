@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+
+{% block title %}Goals — Savings Dashboard{% endblock %}
+{% block page_title %}Goals{% endblock %}
+
+{% block content %}
+  <h1 class="page-heading">All goals</h1>
+  <ul class="goal-list">
+    {% for goal in goals %}
+      <li>
+        <a href="{% url 'dashboard:goal_detail' goal.id %}">
+          <div class="goal-row">
+            <span class="goal-name">{{ goal.name }}</span>
+            <span class="goal-amounts">${{ goal.saved }} / ${{ goal.target }}</span>
+          </div>
+          <progress value="{{ goal.saved }}" max="{{ goal.target }}"></progress>
+          <div class="goal-meta">
+            <span>{{ goal.pct }}% complete</span>
+            <span>Due {{ goal.due }}</span>
+          </div>
+        </a>
+      </li>
+    {% endfor %}
+  </ul>
+{% endblock %}

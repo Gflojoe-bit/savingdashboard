@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ account.name }} — Savings Dashboard{% endblock %}
+{% block page_title %}Account{% endblock %}
+
+{% block header %}
+  <header class="page-header">
+    <a href="{% url 'dashboard:accounts' %}">← Accounts</a>
+    <span class="page-title">Account</span>
+    <span></span>
+  </header>
+{% endblock %}
+
+{% block content %}
+  <div class="acct-header">
+    <div class="name">{{ account.name }}</div>
+    <div class="type">{{ account.type }}</div>
+    <div class="balance">${{ account.balance }}</div>
+  </div>
+
+  <h2>Transactions</h2>
+  <ul class="list">
+    {% for txn in transactions %}
+      <li>
+        <div class="row">
+          <div class="row-left">
+            <span class="row-main">{{ txn.name }}</span>
+            <span class="row-sub">{{ txn.date }}</span>
+          </div>
+          <span class="row-right {% if txn.credit %}credit{% endif %}">{{ txn.amount }}</span>
+        </div>
+      </li>
+    {% endfor %}
+  </ul>
+{% endblock %}

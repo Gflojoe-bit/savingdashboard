@@ -6,3 +6,6 @@ __pycache__/
 .DS_Store
 staticfiles/
 media/
+.claude/settings.local.json
+design for saving app.zip
+design-review/

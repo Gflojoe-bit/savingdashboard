@@ -1,0 +1,27 @@
+{% extends 'base.html' %}
+
+{% block title %}Transactions — Savings Dashboard{% endblock %}
+{% block page_title %}Transactions{% endblock %}
+
+{% block content %}
+  <h1 class="page-heading">All transactions</h1>
+
+  {% for group in months %}
+    <div class="month-group">
+      <div class="month-label">{{ group.label }}</div>
+      <ul class="list">
+        {% for txn in group.transactions %}
+          <li>
+            <div class="row">
+              <div class="row-left">
+                <span class="row-main">{{ txn.name }}</span>
+                <span class="row-sub">{{ txn.date }} · {{ txn.account }}</span>
+              </div>
+              <span class="row-right {% if txn.credit %}credit{% endif %}">{{ txn.amount }}</span>
+            </div>
+          </li>
+        {% endfor %}
+      </ul>
+    </div>
+  {% endfor %}
+{% endblock %}

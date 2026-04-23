@@ -1,0 +1,14 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "placeholder-screens",
+      "runtimeExecutable": "/usr/bin/python3",
+      "runtimeArgs": [
+        "-c",
+        "import os; os.chdir('/Users/josephgorenflo/Documents/savings-dashboard/savings-dashboard-screens'); from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer; ThreadingHTTPServer(('127.0.0.1', 8765), SimpleHTTPRequestHandler).serve_forever()"
+      ],
+      "port": 8765
+    }
+  ]
+}
