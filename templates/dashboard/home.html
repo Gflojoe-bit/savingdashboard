@@ -15,17 +15,17 @@
   <div class="summary-grid">
     <div class="summary-card">
       <p class="summary-label">Income</p>
-      <div class="summary-value">${{ month_summary.income }}</div>
+      <div class="summary-value">${{ month_summary.income|floatformat:2 }}</div>
       <p class="summary-sub">{{ month_summary.label }}</p>
     </div>
     <div class="summary-card">
       <p class="summary-label">Spending</p>
-      <div class="summary-value">${{ month_summary.spending }}</div>
+      <div class="summary-value">${{ month_summary.spending|floatformat:2 }}</div>
       <p class="summary-sub">{{ month_summary.label }}</p>
     </div>
     <div class="summary-card">
       <p class="summary-label">Savings</p>
-      <div class="summary-value">${{ month_summary.savings }}</div>
+      <div class="summary-value">{% if month_summary.savings < 0 %}−${{ month_summary.savings|floatformat:"-2"|slice:"1:" }}{% else %}${{ month_summary.savings|floatformat:2 }}{% endif %}</div>
       <p class="summary-sub">{{ month_summary.label }}</p>
     </div>
 
@@ -96,7 +96,7 @@
               </a>
             </td>
             <td class="cell-type">{{ acct.get_type_display }}</td>
-            <td class="right">${{ acct.balance }}</td>
+            <td class="right">${{ acct.current_balance }}</td>
             <td class="right"><a href="{% url 'dashboard:account_detail' acct.id %}" class="chev">›</a></td>
           </tr>
         {% endfor %}
@@ -113,15 +113,19 @@
         <li>
           <div class="row">
             <div class="row-left">
-              <span class="row-main">{{ txn.name }}</span>
-              <span class="row-sub">{{ txn.date }} · {{ txn.account }}</span>
+              <span class="row-main">{{ txn.description|default:txn.merchant|default:"(no description)" }}</span>
+              <span class="row-sub">{{ txn.date|date:"M j, Y" }} · {{ txn.account.name }}</span>
             </div>
-            <span class="row-right {% if txn.credit %}credit{% endif %}">{{ txn.amount }}</span>
+            <span class="row-right {% if txn.is_credit %}credit{% endif %}">
+              {% if txn.is_credit %}+{% else %}−{% endif %}${{ txn.amount_abs }}
+            </span>
           </div>
         </li>
+      {% empty %}
+        <li class="empty">No transactions yet.</li>
       {% endfor %}
     </ul>
-    <a href="{% url 'dashboard:transactions' %}" class="view-all">View all transactions →</a>
+    <a href="{% url 'transactions:list' %}" class="view-all">View all transactions →</a>
   </section>
 
   <!-- Savings over time chart -->

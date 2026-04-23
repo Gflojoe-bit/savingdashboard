@@ -16,3 +16,10 @@ class Account(models.Model):
 
     def __str__(self):
         return self.name
+
+    @property
+    def current_balance(self):
+        from django.db.models import Sum
+
+        delta = self.transactions.aggregate(total=Sum("amount"))["total"] or 0
+        return self.balance + delta
