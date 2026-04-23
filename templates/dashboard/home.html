@@ -105,6 +105,25 @@
     <a href="{% url 'dashboard:accounts' %}" class="view-all">View all accounts →</a>
   </section>
 
+  <!-- Recent transactions -->
+  <section>
+    <h2>Recent transactions</h2>
+    <ul class="list">
+      {% for txn in recent_transactions %}
+        <li>
+          <div class="row">
+            <div class="row-left">
+              <span class="row-main">{{ txn.name }}</span>
+              <span class="row-sub">{{ txn.date }} · {{ txn.account }}</span>
+            </div>
+            <span class="row-right {% if txn.credit %}credit{% endif %}">{{ txn.amount }}</span>
+          </div>
+        </li>
+      {% endfor %}
+    </ul>
+    <a href="{% url 'dashboard:transactions' %}" class="view-all">View all transactions →</a>
+  </section>
+
   <!-- Savings over time chart -->
   <section>
     <h2>Savings over time</h2>
@@ -126,25 +145,6 @@
       {% endfor %}
     </ul>
     <a href="{% url 'dashboard:goals' %}" class="view-all">View all goals →</a>
-  </section>
-
-  <!-- Recent transactions (savings record) -->
-  <section>
-    <h2>Recent transactions</h2>
-    <ul class="list">
-      {% for txn in recent_transactions %}
-        <li>
-          <div class="row">
-            <div class="row-left">
-              <span class="row-main">{{ txn.name }}</span>
-              <span class="row-sub">{{ txn.date }} · {{ txn.account }}</span>
-            </div>
-            <span class="row-right {% if txn.credit %}credit{% endif %}">{{ txn.amount }}</span>
-          </div>
-        </li>
-      {% endfor %}
-    </ul>
-    <a href="{% url 'dashboard:transactions' %}" class="view-all">View all transactions →</a>
   </section>
 
 {% endblock %}

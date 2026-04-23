@@ -218,7 +218,15 @@ main h2 {
   border-bottom: 1px solid #eee;
   font-size: 14px;
   vertical-align: middle;
-  overflow-wrap: anywhere;  /* long account names wrap instead of overflow */
+}
+/* Only wrap overflow inside the account-name cell — never break other cells
+   mid-word (was splitting "Checking" across two lines). */
+.accounts-table td:first-child { overflow-wrap: break-word; }
+.accounts-table td.cell-type,
+.accounts-table th.cell-type {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .accounts-table th {
   font-size: 11px;
@@ -235,9 +243,10 @@ main h2 {
 .accounts-table tbody tr:last-child th,
 .accounts-table tbody tr:last-child td { border-bottom: none; }
 
-/* Column sizing — lock the secondary columns so the Account column gets the rest */
-.accounts-table col.col-type    { width: 72px; }
-.accounts-table col.col-balance { width: 90px; }
+/* Column sizing — lock the secondary columns so the Account column gets the rest.
+   col-type wide enough for "Checking" / "Savings" / "Investment" without wrap. */
+.accounts-table col.col-type    { width: 96px; }
+.accounts-table col.col-balance { width: 100px; }
 .accounts-table col.col-chev    { width: 24px; }
 
 /* On narrow screens the table collapses into stacked rows: each account is
@@ -277,9 +286,29 @@ main h2 {
     gap: 2px;
     text-decoration: none;
     color: #111;
+    min-width: 0;
   }
-  .accounts-table .acct-name { font-size: 14px; font-weight: 500; word-break: break-word; }
-  .accounts-table .acct-type-inline { display: block; font-size: 11px; color: #777; }
+  /* Stay on one line — truncate with ellipsis if a name is ever too long.
+     No word-break (was splitting "Checking" mid-word on tight screens). */
+  .accounts-table .acct-name {
+    font-size: 13px;
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .accounts-table .acct-type-inline {
+    display: block;
+    font-size: 11px;
+    color: #777;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}
+@media (max-width: 340px) {
+  .accounts-table .acct-name { font-size: 12px; }
+  .accounts-table .acct-type-inline { font-size: 10px; }
 
   /* Hide the dedicated Type cell — its content is shown inline above */
   .accounts-table td.cell-type { display: none; }
