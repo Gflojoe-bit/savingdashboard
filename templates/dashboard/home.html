@@ -92,10 +92,10 @@
             <td>
               <a href="{% url 'dashboard:account_detail' acct.id %}">
                 <span class="acct-name">{{ acct.name }}</span>
-                <span class="acct-type-inline">{{ acct.type }}</span>
+                <span class="acct-type-inline">{{ acct.get_type_display }}</span>
               </a>
             </td>
-            <td class="cell-type">{{ acct.type }}</td>
+            <td class="cell-type">{{ acct.get_type_display }}</td>
             <td class="right">${{ acct.balance }}</td>
             <td class="right"><a href="{% url 'dashboard:account_detail' acct.id %}" class="chev">›</a></td>
           </tr>

@@ -11,7 +11,7 @@
         <a href="{% url 'dashboard:account_detail' acct.id %}">
           <div class="row-left">
             <span class="row-main">{{ acct.name }}</span>
-            <span class="row-sub">{{ acct.type }}</span>
+            <span class="row-sub">{{ acct.get_type_display }}</span>
           </div>
           <span class="row-right">${{ acct.balance }} ›</span>
         </a>

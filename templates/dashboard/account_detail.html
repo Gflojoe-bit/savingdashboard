@@ -14,7 +14,7 @@
 {% block content %}
   <div class="acct-header">
     <div class="name">{{ account.name }}</div>
-    <div class="type">{{ account.type }}</div>
+    <div class="type">{{ account.get_type_display }}</div>
     <div class="balance">${{ account.balance }}</div>
   </div>
 
