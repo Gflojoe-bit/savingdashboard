@@ -45,4 +45,10 @@ When starting a chat on a subsystem branch, the first thing to do is read this f
 
 - Deployment target (local-only for now).
 - Multi-user vs single-user — start single-user, revisit.
-- Whether to add Plaid or stay manual/CSV-only.
+- Whether to add Plaid or stay manual/CSV-only. Current plan: Sandbox-first when we get there; transactions model should be shaped to accommodate Plaid fields (external_id, pending flag, merchant, category) to avoid a later migration.
+- **Income vs spending split** (for home-dashboard summary tiles). Simplest heuristic: positive amount = income, negative = spending. Decide in the `transactions` subsystem.
+- **Weekly/Monthly/Yearly savings target** (powers the goal tile's W/M/Y toggle on home). Options: (a) extend the `goals` subsystem to support recurring targets, or (b) add a single "savings plan" settings field. Decide before finishing `goals`.
+- **"Savings over time" chart data source.** Either (a) a daily/weekly snapshot table of total-savings balance, or (b) compute on the fly from transaction history. Decide when wiring Chart.js.
+- **Where subsystem views live long-term.** Currently all list/detail views sit in `dashboard/` against `fake_data.py`. Reasonable rule going forward: home stays in `dashboard/` (aggregation); accounts list/detail moves to `accounts/`; transactions to `transactions/`; goals to `goals/`. Confirm as each subsystem lands.
+- **Desktop width cap.** Layout is mobile-first with no max-width — stretches full-width on desktop. Add a `max-width` later if it bothers anyone.
+- **When to bring in a professional designer** — the current look is intentionally placeholder. Structure should survive a redesign; mostly `static/css/app.css` churn.
