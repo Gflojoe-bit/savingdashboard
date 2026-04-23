@@ -1,27 +1,46 @@
-"""UI scaffold views — hardcoded data.
+"""Dashboard aggregation views.
 
-Every view here renders against placeholder data from ``fake_data`` so the
-full clickable app exists before the real models (accounts / transactions /
-goals) are built. As each subsystem branch lands, its view moves to the
-owning app and the fake_data reference gets swapped for a queryset.
+Accounts/transactions/goals detail lives in their own apps. This layer composes
+them for the home screen and the accounts/goals landing pages.
 """
 
+from datetime import date
+
+from django.db.models import Sum
 from django.http import Http404
 from django.shortcuts import get_object_or_404, render
 
 from accounts.models import Account
+from transactions.models import Transaction
 
 from . import fake_data
 
 
+def _month_summary(today=None):
+    today = today or date.today()
+    month_qs = Transaction.objects.filter(date__year=today.year, date__month=today.month)
+    income = month_qs.filter(amount__gt=0).aggregate(s=Sum("amount"))["s"] or 0
+    spending = month_qs.filter(amount__lt=0).aggregate(s=Sum("amount"))["s"] or 0
+    spending = -spending  # flip sign for display
+    return {
+        "label": today.strftime("%B %Y"),
+        "income": income,
+        "spending": spending,
+        "savings": income - spending,
+    }
+
+
 def home(request):
+    recent = (
+        Transaction.objects.select_related("account")
+        .order_by("-date", "-created_at")[:3]
+    )
     return render(request, 'dashboard/home.html', {
         'active_tab': 'home',
-        'total_savings': fake_data.TOTAL_SAVINGS,
-        'month_summary': fake_data.MONTH_SUMMARY,
+        'month_summary': _month_summary(),
         'savings_goal_periods': fake_data.SAVINGS_GOAL_PERIODS,
         'goals': fake_data.GOALS,
-        'recent_transactions': fake_data.RECENT_TRANSACTIONS,
+        'recent_transactions': recent,
         'accounts': Account.objects.all(),
     })
 
@@ -38,14 +57,7 @@ def account_detail(request, account_id):
     return render(request, 'dashboard/account_detail.html', {
         'active_tab': 'accounts',
         'account': account,
-        'transactions': fake_data.TRANSACTIONS_BY_ACCOUNT.get(account_id, []),
-    })
-
-
-def transactions(request):
-    return render(request, 'dashboard/transactions.html', {
-        'active_tab': 'transactions',
-        'months': fake_data.TRANSACTIONS_BY_MONTH,
+        'transactions': account.transactions.all(),
     })
 
 

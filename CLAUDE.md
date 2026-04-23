@@ -41,13 +41,16 @@ When starting a chat on a subsystem branch, the first thing to do is read this f
 - Migrations are committed.
 - Keep subsystem branches small and mergeable — rebase on `main` before merging.
 
+## Decisions
+
+- **`Account.balance` is a starting-balance snapshot**, with `current_balance` computed as `balance + sum(transactions.amount)`. Chosen because Plaid gives a balance directly and CSV imports rarely go back to account open — a pure computed balance would force a synthetic opening transaction per account.
+- **Transaction `amount` is signed**: positive = income, negative = spending. Matches bank CSV / Plaid conventions; dashboard tiles split via `sum(positive)` / `sum(negative)` rather than a separate `type` field.
+
 ## Not yet decided
 
 - Deployment target (local-only for now).
 - Multi-user vs single-user — start single-user, revisit.
 - Whether to add Plaid or stay manual/CSV-only. Current plan: Sandbox-first when we get there; transactions model should be shaped to accommodate Plaid fields (external_id, pending flag, merchant, category) to avoid a later migration.
-- **Income vs spending split** (for home-dashboard summary tiles). Simplest heuristic: positive amount = income, negative = spending. Decide in the `transactions` subsystem.
-- **`Account.balance`: stored vs computed.** Currently stored (manual `DecimalField`). Long term, either drop it and compute `sum(account.transactions)`, or keep it as a starting-balance snapshot with a computed `current_balance` property. Decide in the `transactions` subsystem.
 - **Weekly/Monthly/Yearly savings target** (powers the goal tile's W/M/Y toggle on home). Options: (a) extend the `goals` subsystem to support recurring targets, or (b) add a single "savings plan" settings field. Decide before finishing `goals`.
 - **"Savings over time" chart data source.** Either (a) a daily/weekly snapshot table of total-savings balance, or (b) compute on the fly from transaction history. Decide when wiring Chart.js.
 - **Where subsystem views live long-term.** Currently all list/detail views sit in `dashboard/` against `fake_data.py`. Reasonable rule going forward: home stays in `dashboard/` (aggregation); accounts list/detail moves to `accounts/`; transactions to `transactions/`; goals to `goals/`. Confirm as each subsystem lands.

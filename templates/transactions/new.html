@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+
+{% block title %}New transaction — Savings Dashboard{% endblock %}
+{% block page_title %}New transaction{% endblock %}
+
+{% block header %}
+  <header class="page-header">
+    <a href="{% url 'transactions:list' %}">← Transactions</a>
+    <span class="page-title">New transaction</span>
+    <span></span>
+  </header>
+{% endblock %}
+
+{% block content %}
+  <form method="post" class="form">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <p class="form-hint">Positive amounts are income, negative amounts are spending.</p>
+    <button type="submit" class="btn">Save</button>
+  </form>
+{% endblock %}

@@ -15,7 +15,7 @@
   <div class="acct-header">
     <div class="name">{{ account.name }}</div>
     <div class="type">{{ account.get_type_display }}</div>
-    <div class="balance">${{ account.balance }}</div>
+    <div class="balance">${{ account.current_balance }}</div>
   </div>
 
   <h2>Transactions</h2>
@@ -24,12 +24,16 @@
       <li>
         <div class="row">
           <div class="row-left">
-            <span class="row-main">{{ txn.name }}</span>
-            <span class="row-sub">{{ txn.date }}</span>
+            <span class="row-main">{{ txn.description|default:txn.merchant|default:"(no description)" }}</span>
+            <span class="row-sub">{{ txn.date|date:"M j, Y" }}</span>
           </div>
-          <span class="row-right {% if txn.credit %}credit{% endif %}">{{ txn.amount }}</span>
+          <span class="row-right {% if txn.is_credit %}credit{% endif %}">
+            {% if txn.is_credit %}+{% else %}−{% endif %}${{ txn.amount_abs }}
+          </span>
         </div>
       </li>
+    {% empty %}
+      <li class="empty">No transactions yet.</li>
     {% endfor %}
   </ul>
 {% endblock %}
