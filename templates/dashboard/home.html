@@ -10,16 +10,108 @@
 {% endblock %}
 
 {% block content %}
-  <div class="hero-block">
-    <p>Total savings</p>
-    <div class="hero-number">${{ total_savings }}</div>
+
+  <!-- Summary: 2x2 tile grid -->
+  <div class="summary-grid">
+    <div class="summary-card">
+      <p class="summary-label">Income</p>
+      <div class="summary-value">${{ month_summary.income }}</div>
+      <p class="summary-sub">{{ month_summary.label }}</p>
+    </div>
+    <div class="summary-card">
+      <p class="summary-label">Spending</p>
+      <div class="summary-value">${{ month_summary.spending }}</div>
+      <p class="summary-sub">{{ month_summary.label }}</p>
+    </div>
+    <div class="summary-card">
+      <p class="summary-label">Savings</p>
+      <div class="summary-value">${{ month_summary.savings }}</div>
+      <p class="summary-sub">{{ month_summary.label }}</p>
+    </div>
+
+    <!-- Goal bar tile — W / M / Y toggle, progress-to-goal display. -->
+    <div class="summary-card goal-tile" data-active-period="month">
+      <div class="goal-tile-toggle">
+        {% for period in savings_goal_periods %}
+          <button type="button"
+                  class="period-btn {% if period.key == 'month' %}active{% endif %}"
+                  data-period="{{ period.key }}">
+            {{ period.label|slice:":1" }}
+          </button>
+        {% endfor %}
+      </div>
+      {% for period in savings_goal_periods %}
+        <div class="goal-tile-body" data-period="{{ period.key }}"
+             {% if period.key != 'month' %}hidden{% endif %}>
+          <div class="goal-tile-saved">${{ period.saved_display }}</div>
+          <div class="goal-tile-target">of ${{ period.target_display }} goal</div>
+          <progress class="goal-tile-bar" value="{{ period.saved }}" max="{{ period.target }}"></progress>
+        </div>
+      {% endfor %}
+    </div>
   </div>
 
+  <script>
+    // Toggle W / M / Y periods inside the goal tile — placeholder UI.
+    document.querySelectorAll('.goal-tile').forEach(function (tile) {
+      tile.querySelectorAll('.period-btn').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          var target = btn.dataset.period;
+          tile.querySelectorAll('.period-btn').forEach(function (b) {
+            b.classList.toggle('active', b.dataset.period === target);
+          });
+          tile.querySelectorAll('.goal-tile-body').forEach(function (body) {
+            body.hidden = body.dataset.period !== target;
+          });
+        });
+      });
+    });
+  </script>
+
+  <!-- Accounts — tabular -->
+  <section>
+    <h2>Accounts</h2>
+    <table class="accounts-table">
+      <colgroup>
+        <col>
+        <col class="col-type">
+        <col class="col-balance">
+        <col class="col-chev">
+      </colgroup>
+      <thead>
+        <tr>
+          <th>Account</th>
+          <th class="cell-type">Type</th>
+          <th class="right">Balance</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for acct in accounts %}
+          <tr>
+            <td>
+              <a href="{% url 'dashboard:account_detail' acct.id %}">
+                <span class="acct-name">{{ acct.name }}</span>
+                <span class="acct-type-inline">{{ acct.type }}</span>
+              </a>
+            </td>
+            <td class="cell-type">{{ acct.type }}</td>
+            <td class="right">${{ acct.balance }}</td>
+            <td class="right"><a href="{% url 'dashboard:account_detail' acct.id %}" class="chev">›</a></td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    <a href="{% url 'dashboard:accounts' %}" class="view-all">View all accounts →</a>
+  </section>
+
+  <!-- Savings over time chart -->
   <section>
     <h2>Savings over time</h2>
     <div class="chart-placeholder">Savings over time</div>
   </section>
 
+  <!-- Goals -->
   <section>
     <h2>Goals</h2>
     <ul class="list">
@@ -36,6 +128,7 @@
     <a href="{% url 'dashboard:goals' %}" class="view-all">View all goals →</a>
   </section>
 
+  <!-- Recent transactions (savings record) -->
   <section>
     <h2>Recent transactions</h2>
     <ul class="list">
@@ -54,21 +147,4 @@
     <a href="{% url 'dashboard:transactions' %}" class="view-all">View all transactions →</a>
   </section>
 
-  <section>
-    <h2>Accounts</h2>
-    <ul class="list">
-      {% for acct in accounts %}
-        <li>
-          <div class="row">
-            <div class="row-left">
-              <span class="row-main">{{ acct.name }}</span>
-              <span class="row-sub">{{ acct.type }}</span>
-            </div>
-            <span class="row-right">${{ acct.balance }}</span>
-          </div>
-        </li>
-      {% endfor %}
-    </ul>
-    <a href="{% url 'dashboard:accounts' %}" class="view-all">View all accounts →</a>
-  </section>
 {% endblock %}

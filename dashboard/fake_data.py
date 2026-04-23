@@ -71,3 +71,43 @@ GOALS = [
 ]
 
 TOTAL_SAVINGS = "12,400"
+
+# Monthly summary numbers for the 3 home-page cards.
+MONTH_SUMMARY = {
+    "label": "April 2026",
+    "income":   "2,400",
+    "spending": "1,284",
+    "savings":  "1,116",  # income − spending
+}
+
+# Savings progress against a goal — three time periods, toggleable on the home
+# page like a brokerage chart's 1W / 1M / 1Y. Displayed as progress-in-a-tile.
+SAVINGS_GOAL_PERIODS = [
+    {
+        "key": "week",
+        "label": "Week",
+        "saved":  250,
+        "target": 400,
+        "saved_display":  "250",
+        "target_display": "400",
+        "pct": 63,
+    },
+    {
+        "key": "month",
+        "label": "Month",
+        "saved":  1116,
+        "target": 1500,
+        "saved_display":  "1,116",
+        "target_display": "1,500",
+        "pct": 74,
+    },
+    {
+        "key": "year",
+        "label": "Year",
+        "saved":  12400,
+        "target": 20000,
+        "saved_display":  "12,400",
+        "target_display": "20,000",
+        "pct": 62,
+    },
+]

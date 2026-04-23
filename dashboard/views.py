@@ -16,6 +16,8 @@ def home(request):
     return render(request, 'dashboard/home.html', {
         'active_tab': 'home',
         'total_savings': fake_data.TOTAL_SAVINGS,
+        'month_summary': fake_data.MONTH_SUMMARY,
+        'savings_goal_periods': fake_data.SAVINGS_GOAL_PERIODS,
         'goals': fake_data.GOALS,
         'recent_transactions': fake_data.RECENT_TRANSACTIONS,
         'accounts': fake_data.ACCOUNTS,
