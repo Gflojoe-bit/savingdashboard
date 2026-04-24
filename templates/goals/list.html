@@ -1,0 +1,41 @@
+{% extends 'base.html' %}
+
+{% block title %}Goals — Savings Dashboard{% endblock %}
+{% block page_title %}Goals{% endblock %}
+
+{% block content %}
+  <h1 class="page-heading">All goals</h1>
+
+  <div class="goal-actions">
+    <a href="{% url 'goals:new' %}" class="btn">+ New goal</a>
+    <a href="{% url 'goals:basket' %}" class="btn">Edit basket</a>
+  </div>
+
+  {% if rows %}
+    <p class="form-hint">
+      Total saved: ${{ savings|floatformat:0 }} ·
+      Basket: {{ basket_total|floatformat:0 }}%
+      {% if not basket_balanced %} <span style="color:#b00">(should be 100%)</span>{% endif %}
+    </p>
+  {% endif %}
+
+  <ul class="goal-list">
+    {% for row in rows %}
+      <li>
+        <a href="{% url 'goals:detail' row.goal.id %}">
+          <div class="goal-row">
+            <span class="goal-name">{{ row.goal.name }}</span>
+            <span class="goal-amounts">${{ row.saved|floatformat:0 }} / ${{ row.goal.target_amount|floatformat:0 }}</span>
+          </div>
+          <progress value="{{ row.saved }}" max="{{ row.goal.target_amount }}"></progress>
+          <div class="goal-meta">
+            <span>{{ row.pct }}% complete · {{ row.goal.basket_percent|floatformat:0 }}% of basket</span>
+            {% if row.goal.target_date %}<span>Due {{ row.goal.target_date|date:"M j, Y" }}</span>{% endif %}
+          </div>
+        </a>
+      </li>
+    {% empty %}
+      <li class="empty">No goals yet. <a href="{% url 'goals:new' %}">Add one</a>.</li>
+    {% endfor %}
+  </ul>
+{% endblock %}

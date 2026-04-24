@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+
+{% block title %}New goal — Savings Dashboard{% endblock %}
+{% block page_title %}New goal{% endblock %}
+
+{% block header %}
+  <header class="page-header">
+    <a href="{% url 'goals:list' %}">← Goals</a>
+    <span class="page-title">New goal</span>
+    <span></span>
+  </header>
+{% endblock %}
+
+{% block content %}
+  <p class="form-hint">
+    Existing basket: {{ existing_pct|floatformat:0 }}% allocated ·
+    {{ available_pct|floatformat:0 }}% available for this goal.
+    {% if available_pct == 0 %}
+      <br>No room left — <a href="{% url 'goals:basket' %}">edit the basket</a>
+      to free up some allocation first.
+    {% endif %}
+  </p>
+  <form method="post" class="form">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit" class="btn">Save</button>
+  </form>
+{% endblock %}

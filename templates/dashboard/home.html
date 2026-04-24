@@ -138,17 +138,19 @@
   <section>
     <h2>Goals</h2>
     <ul class="list">
-      {% for goal in goals %}
+      {% for row in goal_rows %}
         <li class="goal-item">
           <div class="goal-row">
-            <span>{{ goal.name }}</span>
-            <span>${{ goal.saved }} of ${{ goal.target }}</span>
+            <span>{{ row.goal.name }}</span>
+            <span>${{ row.saved|floatformat:0 }} of ${{ row.goal.target_amount|floatformat:0 }}</span>
           </div>
-          <progress value="{{ goal.saved }}" max="{{ goal.target }}"></progress>
+          <progress value="{{ row.saved }}" max="{{ row.goal.target_amount }}"></progress>
         </li>
+      {% empty %}
+        <li class="empty">No goals yet.</li>
       {% endfor %}
     </ul>
-    <a href="{% url 'dashboard:goals' %}" class="view-all">View all goals →</a>
+    <a href="{% url 'goals:list' %}" class="view-all">View all goals →</a>
   </section>
 
 {% endblock %}

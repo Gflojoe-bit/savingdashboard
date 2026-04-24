@@ -1,19 +1,18 @@
 """Dashboard aggregation views.
 
 Accounts/transactions/goals detail lives in their own apps. This layer composes
-them for the home screen and the accounts/goals landing pages.
+them for the home screen and the accounts landing pages.
 """
 
 from datetime import date
+from decimal import Decimal
 
 from django.db.models import Sum
-from django.http import Http404
 from django.shortcuts import get_object_or_404, render
 
 from accounts.models import Account
+from goals.models import Goal, period_savings
 from transactions.models import Transaction
-
-from . import fake_data
 
 
 def _month_summary(today=None):
@@ -30,16 +29,45 @@ def _month_summary(today=None):
     }
 
 
+def _savings_goal_periods(today=None):
+    """W / M / Y net savings vs. sum of all goal targets."""
+    periods = period_savings(today)
+    target = Goal.objects.aggregate(s=Sum("target_amount"))["s"] or Decimal(0)
+
+    def row(key, label):
+        saved = periods[key]
+        return {
+            "key": key,
+            "label": label,
+            "saved": saved,
+            "target": target,
+            "saved_display": f"{saved:,.0f}",
+            "target_display": f"{target:,.0f}",
+            "pct": int((saved / target) * 100) if target > 0 else 0,
+        }
+
+    return [row("week", "Week"), row("month", "Month"), row("year", "Year")]
+
+
 def home(request):
     recent = (
         Transaction.objects.select_related("account")
         .order_by("-date", "-created_at")[:3]
     )
+    savings_total = Transaction.objects.aggregate(s=Sum("amount"))["s"] or Decimal(0)
+    goals = Goal.objects.all()
+    goal_rows = [
+        {
+            "goal": g,
+            "saved": g.saved_amount(savings_total),
+        }
+        for g in goals
+    ]
     return render(request, 'dashboard/home.html', {
         'active_tab': 'home',
         'month_summary': _month_summary(),
-        'savings_goal_periods': fake_data.SAVINGS_GOAL_PERIODS,
-        'goals': fake_data.GOALS,
+        'savings_goal_periods': _savings_goal_periods(),
+        'goal_rows': goal_rows,
         'recent_transactions': recent,
         'accounts': Account.objects.all(),
     })
@@ -58,23 +86,6 @@ def account_detail(request, account_id):
         'active_tab': 'accounts',
         'account': account,
         'transactions': account.transactions.all(),
-    })
-
-
-def goals(request):
-    return render(request, 'dashboard/goals.html', {
-        'active_tab': 'goals',
-        'goals': fake_data.GOALS,
-    })
-
-
-def goal_detail(request, goal_id):
-    goal = next((g for g in fake_data.GOALS if g['id'] == goal_id), None)
-    if goal is None:
-        raise Http404("Goal not found")
-    return render(request, 'dashboard/goal_detail.html', {
-        'active_tab': 'goals',
-        'goal': goal,
     })
 
 

@@ -1,0 +1,54 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ goal.name }} — Savings Dashboard{% endblock %}
+{% block page_title %}Goal{% endblock %}
+
+{% block header %}
+  <header class="page-header">
+    <a href="{% url 'goals:list' %}">← Goals</a>
+    <span class="page-title">Goal</span>
+    <span></span>
+  </header>
+{% endblock %}
+
+{% block content %}
+  <div class="acct-header">
+    <h1 style="font-size:24px;margin-bottom:4px">{{ goal.name }}</h1>
+    <div class="type">
+      {{ goal.get_category_display }}
+      {% if goal.target_date %} · target {{ goal.target_date|date:"M j, Y" }}{% endif %}
+    </div>
+  </div>
+
+  <div class="stats">
+    <div class="stat"><p>Saved so far</p><div class="val">${{ saved|floatformat:2 }}</div></div>
+    <div class="stat"><p>Target amount</p><div class="val">${{ goal.target_amount|floatformat:2 }}</div></div>
+  </div>
+
+  <h2>Progress</h2>
+  <progress class="large" value="{{ saved }}" max="{{ goal.target_amount }}"></progress>
+  <div class="progress-labels">
+    <span>$0</span>
+    <span>${{ goal.target_amount|floatformat:0 }}</span>
+  </div>
+  <div class="pct">{{ pct }}%</div>
+  <div class="remaining">${{ remaining|floatformat:2 }} remaining</div>
+
+  <h2>Allocation</h2>
+  <p>{{ goal.basket_percent|floatformat:0 }}% of every dollar saved goes to this goal.</p>
+
+  <h2>Recent savings allocated</h2>
+  <ul class="list">
+    {% for row in period_rows %}
+      <li>
+        <div class="row">
+          <div class="row-left">
+            <span class="row-main">This {{ row.label|lower }}</span>
+            <span class="row-sub">{{ goal.basket_percent|floatformat:0 }}% of period savings</span>
+          </div>
+          <span class="row-right {% if row.saved > 0 %}credit{% endif %}">${{ row.saved|floatformat:2 }}</span>
+        </div>
+      </li>
+    {% endfor %}
+  </ul>
+{% endblock %}
