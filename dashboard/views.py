@@ -4,6 +4,7 @@ Accounts/transactions/goals detail lives in their own apps. This layer composes
 them for the home screen and the accounts landing pages.
 """
 
+import calendar
 from collections import defaultdict
 from datetime import date, timedelta
 from decimal import Decimal
@@ -16,18 +17,68 @@ from goals.models import Goal, period_savings
 from transactions.models import Transaction
 
 
+def _format_delta(value):
+    """Format a Decimal as '+$140.00' or '−$50.00' for display.
+
+    Uses an actual unicode minus sign (−) to match the existing template
+    convention on the savings tile.
+    """
+    if value < 0:
+        return f"−${abs(value):,.2f}"
+    return f"+${value:,.2f}"
+
+
+def _prior_month_range(today):
+    """Return (start, end) for the same-day-of-month window in the prior month.
+
+    On today=Apr 24, returns (Mar 1, Mar 24). On Mar 31, when Feb only has
+    28 days, caps end to Feb 28 so we never construct an invalid date.
+    """
+    if today.month == 1:
+        year, month = today.year - 1, 12
+    else:
+        year, month = today.year, today.month - 1
+    last_day = calendar.monthrange(year, month)[1]
+    end_day = min(today.day, last_day)
+    return date(year, month, 1), date(year, month, end_day)
+
+
 def _month_summary(today=None):
-    """Income / spending / savings for the current calendar month.
+    """Income / spending / savings for the current calendar month, plus
+    month-over-month deltas comparing MTD to the same-day-of-month window
+    in the prior month.
 
     Delegates to Transaction.objects.in_range(...).summary() so the math
     definition lives in one place (transactions.models.TransactionQuerySet).
+
+    Delta fields are only populated when the prior-month window contains
+    at least one operational transaction — first-month users and empty
+    gaps don't get misleading "+$X vs $0" lines.
     """
     today = today or date.today()
     start = today.replace(day=1)
-    return {
+    current = Transaction.objects.operational().in_range(start, today).summary()
+
+    prev_start, prev_end = _prior_month_range(today)
+    prev_qs = Transaction.objects.operational().in_range(prev_start, prev_end)
+
+    result = {
         "label": today.strftime("%B %Y"),
-        **Transaction.objects.operational().in_range(start, today).summary(),
+        "has_delta": False,
+        **current,
     }
+
+    if prev_qs.exists():
+        prev = prev_qs.summary()
+        result["has_delta"] = True
+        result["income_delta"] = current["income"] - prev["income"]
+        result["spending_delta"] = current["spending"] - prev["spending"]
+        result["savings_delta"] = current["savings"] - prev["savings"]
+        result["income_delta_display"] = _format_delta(result["income_delta"])
+        result["spending_delta_display"] = _format_delta(result["spending_delta"])
+        result["savings_delta_display"] = _format_delta(result["savings_delta"])
+
+    return result
 
 
 def _savings_goal_periods(today=None):
