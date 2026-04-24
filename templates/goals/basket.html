@@ -1,0 +1,45 @@
+{% extends 'base.html' %}
+
+{% block title %}Basket — Savings Dashboard{% endblock %}
+{% block page_title %}Basket{% endblock %}
+
+{% block header %}
+  <header class="page-header">
+    <a href="{% url 'goals:list' %}">← Goals</a>
+    <span class="page-title">Edit basket</span>
+    <span></span>
+  </header>
+{% endblock %}
+
+{% block content %}
+  <p class="form-hint">
+    Set what share of every dollar saved goes to each goal. Must total 100%.
+  </p>
+
+  {% if messages %}
+    <ul class="messages">
+      {% for m in messages %}<li class="{{ m.tags }}">{{ m }}</li>{% endfor %}
+    </ul>
+  {% endif %}
+
+  {% if formset.forms %}
+    <form method="post" class="form">
+      {% csrf_token %}
+      {{ formset.management_form }}
+      <ul class="goal-list">
+        {% for form in formset.forms %}
+          <li>
+            <div class="goal-row">
+              <span class="goal-name">{{ form.instance.name }}</span>
+              <span>{{ form.basket_percent }} %</span>
+            </div>
+            {% for hidden in form.hidden_fields %}{{ hidden }}{% endfor %}
+          </li>
+        {% endfor %}
+      </ul>
+      <button type="submit" class="btn">Save basket</button>
+    </form>
+  {% else %}
+    <p>No goals yet. <a href="{% url 'goals:new' %}">Create one</a> first.</p>
+  {% endif %}
+{% endblock %}
