@@ -65,7 +65,7 @@ def net_savings(qs=None):
     from transactions.models import Transaction
 
     qs = Transaction.objects.all() if qs is None else qs
-    return max(Decimal(0), qs.summary()["savings"])
+    return max(Decimal(0), qs.operational().summary()["savings"])
 
 
 def period_savings(today=None):

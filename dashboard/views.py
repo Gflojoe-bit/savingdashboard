@@ -25,7 +25,7 @@ def _month_summary(today=None):
     start = today.replace(day=1)
     return {
         "label": today.strftime("%B %Y"),
-        **Transaction.objects.in_range(start, today).summary(),
+        **Transaction.objects.operational().in_range(start, today).summary(),
     }
 
 
