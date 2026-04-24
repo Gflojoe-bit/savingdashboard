@@ -4,7 +4,8 @@ Accounts/transactions/goals detail lives in their own apps. This layer composes
 them for the home screen and the accounts landing pages.
 """
 
-from datetime import date
+from collections import defaultdict
+from datetime import date, timedelta
 from decimal import Decimal
 
 from django.db.models import Sum
@@ -49,6 +50,41 @@ def _savings_goal_periods(today=None):
     return [row("week", "1W"), row("month", "1M"), row("three_months", "3M")]
 
 
+def _savings_over_time(today=None):
+    """All-time cumulative net savings, one point per day from the first
+    operational transaction through today.
+
+    Transfers are excluded via `.operational()` so the line tracks real
+    savings, not money shuffled between owned accounts. Dips (net-negative
+    days) are preserved — flooring at 0 is a goals-side policy, and the
+    chart's job is to show the true running balance of savings.
+
+    Returns {"labels": [ISO date, …], "values": [float, …]}. The client
+    zooms by slicing the tail — the y-axis stays anchored to actual
+    cumulative totals, not re-baselined per window.
+    """
+    today = today or date.today()
+    qs = Transaction.objects.operational()
+    first = qs.order_by("date").first()
+    if first is None:
+        return {"labels": [], "values": []}
+
+    start = first.date
+    daily = defaultdict(Decimal)
+    for row in qs.values("date").annotate(total=Sum("amount")):
+        daily[row["date"]] = row["total"] or Decimal(0)
+
+    labels, values = [], []
+    running = Decimal(0)
+    span = (today - start).days + 1
+    for i in range(span):
+        d = start + timedelta(days=i)
+        running += daily.get(d, Decimal(0))
+        labels.append(d.isoformat())
+        values.append(float(running))
+    return {"labels": labels, "values": values}
+
+
 def home(request):
     recent = (
         Transaction.objects.select_related("account")
@@ -67,6 +103,7 @@ def home(request):
         'active_tab': 'home',
         'month_summary': _month_summary(),
         'savings_goal_periods': _savings_goal_periods(),
+        'savings_series': _savings_over_time(),
         'goal_rows': goal_rows,
         'recent_transactions': recent,
         'accounts': Account.objects.all(),

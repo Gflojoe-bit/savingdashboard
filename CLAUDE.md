@@ -54,6 +54,7 @@ When starting a chat on a subsystem branch, the first thing to do is read this f
 - **Net savings floored at 0.** If a period's spending exceeds income, the period contributes nothing to goals — you can't distribute negative savings. Implemented in `goals.models.net_savings()`.
 - **Goal creation requires `basket_percent`.** The new-goal form validates that the total basket across all goals equals 100% before saving — if not, the form rejects with a hint showing how much room is available. Existing goals must be rebalanced via `/goals/basket/` first to free up space.
 - **Transaction.is_savings_transfer flag + `.operational()` aggregation manager.** Transfers between user-owned accounts are excluded from income / spending / savings math (they'd otherwise inflate both sides of the summary tiles). Every aggregation site chains `Transaction.objects.operational()` before `.summary()`. Per-account `current_balance` intentionally still includes transfers — they are real money movements. Future filters (pending, refunds, …) go on `.operational()`. See `docs/transfer-flag-handoff.md`.
+- **Savings-over-time chart = absolute cumulative, computed on the fly.** One running total per day from the first operational transaction forward; range buttons (1W / 1M / 3M / 1Y / All) zoom the visible X-window while the Y values stay anchored to real cumulative totals. Chart.js from CDN, full series shipped to the client and sliced client-side on zoom. No snapshot table — (b) from the old "data source choice" bullet. Chart does NOT floor at 0 (that's a goals-side allocation rule; the chart's job is to tell the truth). Transfers excluded via `.operational()`. See `docs/chart-handoff.md`.
 
 ## Not yet decided
 
@@ -67,6 +68,5 @@ When starting a chat on a subsystem branch, the first thing to do is read this f
 - **Refund convention.** A refund today is `amount > 0` on a spending-category transaction — it inflates income rather than reducing spending. Probably wrong. Next filter to land on `.operational()` will likely be a refund flag / category.
 - **Pending transactions** are included in aggregation. Plaid surfaces pending rows; whether they belong in the summary tiles is undecided.
 - **Delta vs prior period** on calendar summary tiles ("$890 this month, +$140 vs last month") — cheap motivation boost, not built.
-- **Savings-over-time chart** on home (the `.chart-placeholder` slot). Next feature after this doc lands. Data source choice: (a) snapshot table of total-savings balance, or (b) compute on the fly from transaction history. With rolling windows and real transactions, (b) is the natural first pass.
 - **Desktop width cap.** Layout is mobile-first with no max-width — stretches full-width on desktop. Add a `max-width` later if it bothers anyone.
 - **When to bring in a professional designer** — the current look is intentionally placeholder. Structure should survive a redesign; mostly `static/css/app.css` churn.
