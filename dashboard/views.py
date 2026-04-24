@@ -16,16 +16,16 @@ from transactions.models import Transaction
 
 
 def _month_summary(today=None):
+    """Income / spending / savings for the current calendar month.
+
+    Delegates to Transaction.objects.in_range(...).summary() so the math
+    definition lives in one place (transactions.models.TransactionQuerySet).
+    """
     today = today or date.today()
-    month_qs = Transaction.objects.filter(date__year=today.year, date__month=today.month)
-    income = month_qs.filter(amount__gt=0).aggregate(s=Sum("amount"))["s"] or 0
-    spending = month_qs.filter(amount__lt=0).aggregate(s=Sum("amount"))["s"] or 0
-    spending = -spending  # flip sign for display
+    start = today.replace(day=1)
     return {
         "label": today.strftime("%B %Y"),
-        "income": income,
-        "spending": spending,
-        "savings": income - spending,
+        **Transaction.objects.in_range(start, today).summary(),
     }
 
 

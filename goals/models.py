@@ -3,7 +3,6 @@ from decimal import Decimal
 
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.db import models
-from django.db.models import Sum
 
 
 class Goal(models.Model):
@@ -59,13 +58,14 @@ def net_savings(qs=None):
     """Net savings across a Transaction queryset (income − spending), floored at 0.
 
     Negative cash flow in a period contributes nothing to goals — you can't
-    distribute negative savings.
+    distribute negative savings. The income/spending/savings math itself is
+    defined in `transactions.models.TransactionQuerySet.summary()`; the
+    floor-at-0 rule is the goals-specific policy applied here.
     """
     from transactions.models import Transaction
 
     qs = Transaction.objects.all() if qs is None else qs
-    net = qs.aggregate(s=Sum("amount"))["s"] or Decimal(0)
-    return max(Decimal(0), net)
+    return max(Decimal(0), qs.summary()["savings"])
 
 
 def period_savings(today=None):
@@ -79,7 +79,7 @@ def period_savings(today=None):
         "year": today.replace(month=1, day=1),
     }
     result = {
-        key: net_savings(Transaction.objects.filter(date__gte=start, date__lte=today))
+        key: net_savings(Transaction.objects.in_range(start, today))
         for key, start in starts.items()
     }
     result["all"] = net_savings()
