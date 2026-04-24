@@ -46,7 +46,7 @@ def _savings_goal_periods(today=None):
             "pct": int((saved / target) * 100) if target > 0 else 0,
         }
 
-    return [row("week", "Week"), row("month", "Month"), row("year", "Year")]
+    return [row("week", "1W"), row("month", "1M"), row("three_months", "3M")]
 
 
 def home(request):
