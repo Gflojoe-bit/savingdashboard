@@ -16,16 +16,25 @@
     <div class="summary-card">
       <p class="summary-label">Income</p>
       <div class="summary-value">${{ month_summary.income|floatformat:2 }}</div>
+      {% if month_summary.has_delta %}
+        <p class="summary-delta">{{ month_summary.income_delta_display }} vs last month</p>
+      {% endif %}
       <p class="summary-sub">{{ month_summary.label }}</p>
     </div>
     <div class="summary-card">
       <p class="summary-label">Spending</p>
       <div class="summary-value">${{ month_summary.spending|floatformat:2 }}</div>
+      {% if month_summary.has_delta %}
+        <p class="summary-delta">{{ month_summary.spending_delta_display }} vs last month</p>
+      {% endif %}
       <p class="summary-sub">{{ month_summary.label }}</p>
     </div>
     <div class="summary-card">
       <p class="summary-label">Savings</p>
       <div class="summary-value">{% if month_summary.savings < 0 %}−${{ month_summary.savings|floatformat:"-2"|slice:"1:" }}{% else %}${{ month_summary.savings|floatformat:2 }}{% endif %}</div>
+      {% if month_summary.has_delta %}
+        <p class="summary-delta">{{ month_summary.savings_delta_display }} vs last month</p>
+      {% endif %}
       <p class="summary-sub">{{ month_summary.label }}</p>
     </div>
 
