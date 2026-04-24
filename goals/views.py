@@ -43,7 +43,7 @@ def detail(request, goal_id):
             "label": label,
             "saved": goal.saved_amount(periods[key]),
         }
-        for key, label in [("week", "Week"), ("month", "Month"), ("year", "Year")]
+        for key, label in [("week", "Past week"), ("month", "Past month"), ("three_months", "Past 3 months")]
     ]
     saved_all = goal.saved_amount(periods["all"])
     return render(request, "goals/detail.html", {

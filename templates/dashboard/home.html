@@ -29,14 +29,14 @@
       <p class="summary-sub">{{ month_summary.label }}</p>
     </div>
 
-    <!-- Goal bar tile — W / M / Y toggle, progress-to-goal display. -->
+    <!-- Goal bar tile — rolling 1W / 1M / 3M toggle, progress-to-goal display. -->
     <div class="summary-card goal-tile" data-active-period="month">
       <div class="goal-tile-toggle">
         {% for period in savings_goal_periods %}
           <button type="button"
                   class="period-btn {% if period.key == 'month' %}active{% endif %}"
                   data-period="{{ period.key }}">
-            {{ period.label|slice:":1" }}
+            {{ period.label }}
           </button>
         {% endfor %}
       </div>
@@ -52,7 +52,7 @@
   </div>
 
   <script>
-    // Toggle W / M / Y periods inside the goal tile — placeholder UI.
+    // Toggle rolling 1W / 1M / 3M periods inside the goal tile — placeholder UI.
     document.querySelectorAll('.goal-tile').forEach(function (tile) {
       tile.querySelectorAll('.period-btn').forEach(function (btn) {
         btn.addEventListener('click', function () {

@@ -69,14 +69,21 @@ def net_savings(qs=None):
 
 
 def period_savings(today=None):
-    """Net savings (floored at 0) for week / month / year to date, plus all-time."""
+    """Net savings (floored at 0) for rolling 1W / 1M / 3M windows ending today,
+    plus all-time.
+
+    Windows are inclusive on both ends: `today - (N-1) days` through `today`.
+    So "1W" covers 7 calendar days including today, "1M" covers 30 days, "3M"
+    covers 90 days. Rolling (not calendar-to-date) — per the retrospective
+    savings principle, every window looks backward from today.
+    """
     from transactions.models import Transaction
 
     today = today or date.today()
     starts = {
-        "week": today - timedelta(days=today.weekday()),
-        "month": today.replace(day=1),
-        "year": today.replace(month=1, day=1),
+        "week": today - timedelta(days=6),           # 7-day window
+        "month": today - timedelta(days=29),         # 30-day window
+        "three_months": today - timedelta(days=89),  # 90-day window
     }
     result = {
         key: net_savings(Transaction.objects.in_range(start, today))

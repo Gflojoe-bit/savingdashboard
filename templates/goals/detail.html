@@ -43,7 +43,7 @@
       <li>
         <div class="row">
           <div class="row-left">
-            <span class="row-main">This {{ row.label|lower }}</span>
+            <span class="row-main">{{ row.label }}</span>
             <span class="row-sub">{{ goal.basket_percent|floatformat:0 }}% of period savings</span>
           </div>
           <span class="row-right {% if row.saved > 0 %}credit{% endif %}">${{ row.saved|floatformat:2 }}</span>
