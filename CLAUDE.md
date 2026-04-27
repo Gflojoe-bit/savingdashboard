@@ -32,7 +32,7 @@ When starting a chat on a subsystem branch, the first thing to do is read this f
 | `transactions` | Deposits/withdrawals/transfers tied to an account. Model + list/create views. Source of truth for balances (derived via sum). |
 | `goals` | Savings targets — name, target amount, target date, linked account(s). Progress calculation. |
 | `dashboard` | Home view: totals, recent activity, progress charts (Chart.js). Read-only aggregation layer. |
-| `import` | CSV import of transactions. Column mapping, deduplication, preview-before-commit. |
+| `plaid-sync` | Plaid integration: `Account.external_id`, `/transactions/sync` import, sign-flip + transfer detection per `docs/plaid-data-shape.md`. Sandbox first; Development/Production tier later. |
 | `credit-cards` | Credit card accounts (new `Account.type = credit`), scheduled bills with due dates, checking→card payment flow. Introduces savings / debt / net worth split on the dashboard. |
 
 ## Conventions
@@ -54,6 +54,7 @@ When starting a chat on a subsystem branch, the first thing to do is read this f
 - **Net savings floored at 0.** If a period's spending exceeds income, the period contributes nothing to goals — you can't distribute negative savings. Implemented in `goals.models.net_savings()`.
 - **Goal creation requires `basket_percent`.** The new-goal form validates that the total basket across all goals equals 100% before saving — if not, the form rejects with a hint showing how much room is available. Existing goals must be rebalanced via `/goals/basket/` first to free up space.
 - **Transaction.is_savings_transfer flag + `.operational()` aggregation manager.** Transfers between user-owned accounts are excluded from income / spending / savings math (they'd otherwise inflate both sides of the summary tiles). Every aggregation site chains `Transaction.objects.operational()` before `.summary()`. Per-account `current_balance` intentionally still includes transfers — they are real money movements. Future filters (pending, refunds, …) go on `.operational()`. See `docs/transfer-flag-handoff.md`.
+- **No CSV importer subsystem.** Plaid covers the forward-looking sync; for one-off historical backfill (banks Plaid doesn't cover, or pre-2024 statements), a ~100-line `python manage.py import_csv path/to/file.csv` management command can be written ad-hoc when actually needed. Skipping the full subsystem (UI column mapping, preview, dedup workflow) avoids real engineering for a use case we don't have. The `import` row was removed from the subsystems table.
 - **Savings-over-time chart = absolute cumulative, computed on the fly.** One running total per day from the first operational transaction forward; range buttons (1W / 1M / 3M / 1Y / All) zoom the visible X-window while the Y values stay anchored to real cumulative totals. Chart.js from CDN, full series shipped to the client and sliced client-side on zoom. No snapshot table — (b) from the old "data source choice" bullet. Chart does NOT floor at 0 (that's a goals-side allocation rule; the chart's job is to tell the truth). Transfers excluded via `.operational()`. See `docs/chart-handoff.md`.
 
 ## Not yet decided
