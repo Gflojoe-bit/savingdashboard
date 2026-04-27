@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     'accounts',
     'transactions',
     'goals',
+    'plaid_sync',
 ]
 
 MIDDLEWARE = [
