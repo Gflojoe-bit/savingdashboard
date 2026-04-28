@@ -1,5 +1,6 @@
 from decimal import ROUND_HALF_UP, Decimal
 
+from django.conf import settings
 from django.db import models
 
 
@@ -14,6 +15,11 @@ class Account(models.Model):
         (SAVINGS, "Savings"),
     ]
 
+    owner = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="accounts",
+    )
     name = models.CharField(max_length=100)
     type = models.CharField(max_length=20, choices=TYPE_CHOICES, default=CHECKING)
     institution = models.CharField(max_length=100, blank=True)

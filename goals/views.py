@@ -1,11 +1,21 @@
 from decimal import Decimal
 
 from django.contrib import messages
+from django.contrib.auth.decorators import login_required
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 
+from auth_app.models import current_space
+from transactions.models import Transaction
+
 from .forms import BasketFormSet, GoalForm
 from .models import Goal, net_savings, period_savings
+
+
+def _user_base_qs(user):
+    """Transactions in the user's current Space — scope for savings math."""
+    space = current_space(user)
+    return space.transactions_qs() if space else Transaction.objects.none()
 
 
 def _attach_progress(goals, savings):
@@ -21,9 +31,10 @@ def _attach_progress(goals, savings):
     return rows
 
 
+@login_required
 def list_view(request):
-    goals = Goal.objects.all()
-    savings = net_savings()
+    goals = Goal.objects.filter(owner=request.user)
+    savings = net_savings(_user_base_qs(request.user))
     basket_total = sum((g.basket_percent for g in goals), Decimal(0))
     return render(request, "goals/list.html", {
         "active_tab": "goals",
@@ -34,9 +45,10 @@ def list_view(request):
     })
 
 
+@login_required
 def detail(request, goal_id):
-    goal = get_object_or_404(Goal, pk=goal_id)
-    periods = period_savings()
+    goal = get_object_or_404(Goal, pk=goal_id, owner=request.user)
+    periods = period_savings(base_qs=_user_base_qs(request.user))
     period_rows = [
         {
             "key": key,
@@ -56,17 +68,23 @@ def detail(request, goal_id):
     })
 
 
+@login_required
 def new(request):
     if request.method == "POST":
-        form = GoalForm(request.POST)
+        form = GoalForm(request.POST, user=request.user)
         if form.is_valid():
-            form.save()
+            goal = form.save(commit=False)
+            goal.owner = request.user
+            goal.save()
             return redirect(reverse("goals:list"))
     else:
-        form = GoalForm()
+        form = GoalForm(user=request.user)
 
     from django.db.models import Sum
-    existing = Goal.objects.aggregate(s=Sum("basket_percent"))["s"] or Decimal(0)
+    existing = (
+        Goal.objects.filter(owner=request.user).aggregate(s=Sum("basket_percent"))["s"]
+        or Decimal(0)
+    )
     available = Decimal(100) - existing
 
     return render(request, "goals/new.html", {
@@ -77,8 +95,9 @@ def new(request):
     })
 
 
+@login_required
 def basket(request):
-    qs = Goal.objects.all()
+    qs = Goal.objects.filter(owner=request.user)
     if request.method == "POST":
         formset = BasketFormSet(request.POST, queryset=qs)
         if formset.is_valid():
