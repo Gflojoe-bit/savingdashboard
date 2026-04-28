@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+
+{% block title %}Sign in — Savings Dashboard{% endblock %}
+
+{% block header %}
+  <header class="page-header">
+    <span></span>
+    <span class="page-title">Sign in</span>
+    <span></span>
+  </header>
+{% endblock %}
+
+{% block content %}
+  <form method="post" class="auth-form">
+    {% csrf_token %}
+    {% if form.non_field_errors %}
+      <div class="form-errors">{{ form.non_field_errors }}</div>
+    {% endif %}
+    <p>
+      <label for="{{ form.username.id_for_label }}">Username</label>
+      {{ form.username }}
+    </p>
+    <p>
+      <label for="{{ form.password.id_for_label }}">Password</label>
+      {{ form.password }}
+    </p>
+    <input type="hidden" name="next" value="{{ next }}">
+    <button type="submit">Sign in</button>
+  </form>
+  <p class="auth-hint">
+    Signup is invite-only. Ask the admin to create an account in /admin/.
+  </p>
+{% endblock %}

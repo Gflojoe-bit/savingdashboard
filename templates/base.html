@@ -20,12 +20,14 @@
     {% block content %}{% endblock %}
   </main>
 
-  <nav class="bottom-nav">
-    <a href="{% url 'dashboard:home' %}" {% if active_tab == 'home' %}class="active"{% endif %}>Home</a>
-    <a href="{% url 'dashboard:accounts' %}" {% if active_tab == 'accounts' %}class="active"{% endif %}>Accounts</a>
-    <a href="{% url 'transactions:list' %}" {% if active_tab == 'transactions' %}class="active"{% endif %}>Transactions</a>
-    <a href="{% url 'goals:list' %}" {% if active_tab == 'goals' %}class="active"{% endif %}>Goals</a>
-  </nav>
+  {% if user.is_authenticated %}
+    <nav class="bottom-nav">
+      <a href="{% url 'dashboard:home' %}" {% if active_tab == 'home' %}class="active"{% endif %}>Home</a>
+      <a href="{% url 'dashboard:accounts' %}" {% if active_tab == 'accounts' %}class="active"{% endif %}>Accounts</a>
+      <a href="{% url 'transactions:list' %}" {% if active_tab == 'transactions' %}class="active"{% endif %}>Transactions</a>
+      <a href="{% url 'goals:list' %}" {% if active_tab == 'goals' %}class="active"{% endif %}>Goals</a>
+    </nav>
+  {% endif %}
 
 </body>
 </html>

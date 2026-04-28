@@ -15,6 +15,12 @@ class GoalForm(forms.ModelForm):
             "target_date": forms.DateInput(attrs={"type": "date"}),
         }
 
+    def __init__(self, *args, user=None, **kwargs):
+        # `user` scopes the basket-total check to the saver's own goals;
+        # other users' baskets are independent.
+        super().__init__(*args, **kwargs)
+        self._user = user
+
     def clean(self):
         cleaned = super().clean()
         new_pct = cleaned.get("basket_percent")
@@ -22,6 +28,8 @@ class GoalForm(forms.ModelForm):
             return cleaned
 
         others = Goal.objects.all()
+        if self._user is not None:
+            others = others.filter(owner=self._user)
         if self.instance.pk:
             others = others.exclude(pk=self.instance.pk)
         existing = others.aggregate(s=Sum("basket_percent"))["s"] or Decimal(0)

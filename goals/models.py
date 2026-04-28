@@ -1,6 +1,7 @@
 from datetime import date, timedelta
 from decimal import Decimal
 
+from django.conf import settings
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.db import models
 
@@ -19,6 +20,11 @@ class Goal(models.Model):
         (OTHER, "Other"),
     ]
 
+    owner = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="goals",
+    )
     name = models.CharField(max_length=100)
     category = models.CharField(max_length=20, choices=CATEGORY_CHOICES, default=OTHER)
     target_amount = models.DecimalField(
@@ -68,7 +74,7 @@ def net_savings(qs=None):
     return max(Decimal(0), qs.operational().summary()["savings"])
 
 
-def period_savings(today=None):
+def period_savings(today=None, base_qs=None):
     """Net savings (floored at 0) for rolling 1W / 1M / 3M windows ending today,
     plus all-time.
 
@@ -76,18 +82,22 @@ def period_savings(today=None):
     So "1W" covers 7 calendar days including today, "1M" covers 30 days, "3M"
     covers 90 days. Rolling (not calendar-to-date) — per the retrospective
     savings principle, every window looks backward from today.
+
+    `base_qs` is the Space-scoped Transaction queryset; default is all
+    transactions (used by tests and ad-hoc callers).
     """
     from transactions.models import Transaction
 
     today = today or date.today()
+    base = Transaction.objects.all() if base_qs is None else base_qs
     starts = {
         "week": today - timedelta(days=6),           # 7-day window
         "month": today - timedelta(days=29),         # 30-day window
         "three_months": today - timedelta(days=89),  # 90-day window
     }
     result = {
-        key: net_savings(Transaction.objects.in_range(start, today))
+        key: net_savings(base.in_range(start, today))
         for key, start in starts.items()
     }
-    result["all"] = net_savings()
+    result["all"] = net_savings(base)
     return result
