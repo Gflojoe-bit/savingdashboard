@@ -57,7 +57,9 @@ def backfill(apps, schema_editor):
         space = Space.objects.filter(owner=user, is_personal=True).first()
         if space is None:
             space = Space.objects.create(
-                name=f"{user.get_username()}'s Space",
+                # Historical models in RunPython don't have model methods
+                # like get_username(); read the field directly.
+                name=f"{user.username}'s Space",
                 owner=user,
                 is_personal=True,
             )
