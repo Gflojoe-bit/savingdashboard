@@ -84,6 +84,44 @@ def _month_summary(base_qs, today=None):
     return result
 
 
+def _charged_to_cards(base_qs, today=None):
+    """MTD credit-card debt taken on, plus MTD-vs-prior-MTD delta.
+
+    Mirrors `_month_summary`'s windowing so the tile (when surfaced) reads as
+    a peer of the Income / Spending / Savings tiles. Counted as a positive
+    number — "$X charged to cards this month."
+
+    Card swipes are already negative transactions in the spending math, so
+    this number is a *disaggregation*, not an additional subtraction. It
+    makes the future-obligation slice of spending visible without changing
+    the savings rate.
+
+    Not rendered in the home template yet — piped through context so the
+    tile can be added without re-plumbing the view. Until any credit-typed
+    Account exists, value is Decimal(0) and `has_delta` is False.
+    """
+    today = today or date.today()
+    start = today.replace(day=1)
+    current = base_qs.operational().in_range(start, today).charged_to_cards()
+
+    prev_start, prev_end = _prior_month_range(today)
+    prev_qs = base_qs.operational().in_range(prev_start, prev_end)
+
+    result = {
+        "label": today.strftime("%B %Y"),
+        "value": current,
+        "has_delta": False,
+    }
+
+    if prev_qs.exists():
+        prev = prev_qs.charged_to_cards()
+        result["has_delta"] = True
+        result["delta"] = current - prev
+        result["delta_display"] = _format_delta(result["delta"])
+
+    return result
+
+
 def _savings_goal_periods(base_qs, user, today=None):
     """W / M / 3M net savings vs. sum of the user's goal targets."""
     periods = period_savings(today=today, base_qs=base_qs)
@@ -165,6 +203,7 @@ def home(request):
         'active_tab': 'home',
         'space': space,
         'month_summary': _month_summary(base_qs),
+        'charged_to_cards': _charged_to_cards(base_qs),
         'savings_goal_periods': _savings_goal_periods(base_qs, request.user),
         'savings_series': _savings_over_time(base_qs),
         'goal_rows': goal_rows,

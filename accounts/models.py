@@ -10,9 +10,11 @@ CENTS = Decimal("0.01")
 class Account(models.Model):
     CHECKING = "checking"
     SAVINGS = "savings"
+    CREDIT = "credit"
     TYPE_CHOICES = [
         (CHECKING, "Checking"),
         (SAVINGS, "Savings"),
+        (CREDIT, "Credit Card"),
     ]
 
     owner = models.ForeignKey(
