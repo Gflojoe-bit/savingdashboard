@@ -45,6 +45,24 @@ class TransactionQuerySet(models.QuerySet):
             "savings": income - spending,
         }
 
+    def charged_to_cards(self):
+        """Sum of card-swipe spending in the queryset, as a positive Decimal.
+
+        Filters to negative-amount rows on credit accounts (a card swipe;
+        for credit accounts, negative txn = debt incurred per the sign
+        convention in CLAUDE.md), then sign-flips for display.
+
+        Card payments (transfers from checking → card) are `is_savings_transfer
+        =True`, so callers should chain `.operational().charged_to_cards()` to
+        exclude them — same pattern as `.summary()`.
+        """
+        raw = (
+            self.filter(account__type=Account.CREDIT, amount__lt=0)
+            .aggregate(s=Sum("amount"))["s"]
+            or Decimal(0)
+        )
+        return -raw
+
 
 class Transaction(models.Model):
     account = models.ForeignKey(
