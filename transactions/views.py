@@ -4,6 +4,7 @@ from django.contrib.auth.decorators import login_required
 from django.shortcuts import redirect, render
 from django.urls import reverse
 
+from accounts.models import Account
 from auth_app.models import current_space
 
 from .forms import TransactionForm
@@ -18,6 +19,9 @@ def list_view(request):
         if space
         else Transaction.objects.none()
     )
+    active_type = request.GET.get("type") or ""
+    if active_type == "credit":
+        qs = qs.filter(account__type=Account.CREDIT)
     months = [
         {
             "label": key.strftime("%B %Y"),
@@ -28,6 +32,7 @@ def list_view(request):
     return render(request, "transactions/list.html", {
         "active_tab": "transactions",
         "months": months,
+        "active_type": active_type,
     })
 
 

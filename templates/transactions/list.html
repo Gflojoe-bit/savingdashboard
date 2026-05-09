@@ -9,6 +9,13 @@
     <a class="btn" href="{% url 'transactions:new' %}">+ New</a>
   </div>
 
+  <div class="filter-chips">
+    <a href="{% url 'transactions:list' %}"
+       class="chip {% if not active_type %}active{% endif %}">All</a>
+    <a href="?type=credit"
+       class="chip {% if active_type == 'credit' %}active{% endif %}">Credit cards</a>
+  </div>
+
   {% for group in months %}
     <div class="month-group">
       <div class="month-label">{{ group.label }}</div>

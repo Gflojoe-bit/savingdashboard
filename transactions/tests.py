@@ -5,6 +5,7 @@ from django.contrib.auth import get_user_model
 from django.test import TestCase
 
 from accounts.models import Account
+from goals.models import period_savings
 from transactions.models import Transaction
 
 
@@ -78,3 +79,103 @@ class ChargedToCardsTests(TestCase):
             .charged_to_cards()
         )
         self.assertEqual(result, Decimal("30.00"))
+
+
+class CardPaymentSavingsTests(TestCase):
+    """Paying a credit-card bill from checking is a money-shuffle between two
+    of the user's own accounts, so it must not move period_savings (income −
+    spending). The transfer pair (−X on checking, +X on card, both flagged
+    is_savings_transfer=True) is excluded by `.operational()`, so chaining
+    that filter into `period_savings` is what guarantees the property.
+    """
+
+    def setUp(self):
+        self.user = get_user_model().objects.create_user(
+            username="payer", password="x"
+        )
+        self.checking = Account.objects.create(
+            owner=self.user, name="Checking", type=Account.CHECKING
+        )
+        self.card = Account.objects.create(
+            owner=self.user, name="Visa", type=Account.CREDIT
+        )
+        # Baseline activity inside every rolling period (today − 0 days).
+        Transaction.objects.create(
+            account=self.checking, date=date.today(), amount=Decimal("3000.00")
+        )  # paycheck
+        Transaction.objects.create(
+            account=self.checking, date=date.today(), amount=Decimal("-1200.00")
+        )  # rent
+
+    def test_card_payment_does_not_change_period_savings(self):
+        base_qs = Transaction.objects.filter(account__owner=self.user)
+        before = period_savings(base_qs=base_qs)
+
+        # Pay $400 of the card balance from checking.
+        Transaction.objects.create(
+            account=self.checking,
+            date=date.today(),
+            amount=Decimal("-400.00"),
+            is_savings_transfer=True,
+        )
+        Transaction.objects.create(
+            account=self.card,
+            date=date.today(),
+            amount=Decimal("400.00"),
+            is_savings_transfer=True,
+        )
+
+        after = period_savings(base_qs=base_qs)
+        self.assertEqual(before, after)
+
+
+class TransactionListFilterTests(TestCase):
+    """`?type=credit` on the transactions list narrows to credit-account rows
+    only — the user-facing surface for `Account.CREDIT` introduced on this
+    branch. Anything other than 'credit' is ignored (treated as no filter).
+    """
+
+    def setUp(self):
+        self.user = get_user_model().objects.create_user(
+            username="lister", password="x"
+        )
+        self.client.force_login(self.user)
+        # current_space is auto-created via the post_save signal on User;
+        # opt every account in so the Space queryset returns them.
+        from auth_app.models import current_space
+        space = current_space(self.user)
+        self.checking = Account.objects.create(
+            owner=self.user, name="Checking", type=Account.CHECKING
+        )
+        self.card = Account.objects.create(
+            owner=self.user, name="Visa", type=Account.CREDIT
+        )
+        space.accounts.add(self.checking, self.card)
+        self.checking_txn = Transaction.objects.create(
+            account=self.checking, date=date.today(),
+            amount=Decimal("-50.00"), description="Direct debit",
+        )
+        self.card_txn = Transaction.objects.create(
+            account=self.card, date=date.today(),
+            amount=Decimal("-25.00"), description="Card swipe",
+        )
+
+    def _visible_descriptions(self, response):
+        return [
+            t.description
+            for group in response.context["months"]
+            for t in group["transactions"]
+        ]
+
+    def test_credit_filter_narrows_to_card_rows(self):
+        response = self.client.get("/transactions/?type=credit")
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(self._visible_descriptions(response), ["Card swipe"])
+
+    def test_no_filter_shows_all(self):
+        response = self.client.get("/transactions/")
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            sorted(self._visible_descriptions(response)),
+            ["Card swipe", "Direct debit"],
+        )
