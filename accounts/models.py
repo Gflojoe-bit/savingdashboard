@@ -7,6 +7,14 @@ from django.db import models
 CENTS = Decimal("0.01")
 
 
+class AccountQuerySet(models.QuerySet):
+    def savings_assets(self):
+        return self.filter(type__in=[Account.CHECKING, Account.SAVINGS])
+
+    def debt(self):
+        return self.filter(type=Account.CREDIT)
+
+
 class Account(models.Model):
     CHECKING = "checking"
     SAVINGS = "savings"
@@ -28,6 +36,8 @@ class Account(models.Model):
     balance = models.DecimalField(max_digits=12, decimal_places=2, default=0)
     external_id = models.CharField(max_length=64, blank=True, null=True, unique=True)
 
+    objects = AccountQuerySet.as_manager()
+
     def __str__(self):
         return self.name
 
@@ -39,3 +49,10 @@ class Account(models.Model):
         # SQLite's SUM() on DecimalField returns raw precision (e.g. 9284.6300000000),
         # so quantize back to cents before display.
         return (self.balance + delta).quantize(CENTS, rounding=ROUND_HALF_UP)
+
+
+def net_worth(user):
+    accounts = Account.objects.filter(owner=user)
+    assets = sum((a.current_balance for a in accounts.savings_assets()), Decimal(0))
+    debt = sum((a.current_balance for a in accounts.debt()), Decimal(0))
+    return (assets - debt).quantize(CENTS, rounding=ROUND_HALF_UP)
