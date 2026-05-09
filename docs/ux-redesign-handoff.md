@@ -4,7 +4,9 @@
 **Status:** Not started — this doc is the planning artifact.
 **Audience:** A future Claude session doing the design pass.
 
-First step in that chat: read `CLAUDE.md`, then this doc.
+First step in that chat: read `CLAUDE.md`, then this doc, then `docs/ux-redesign-data-contract.md` (per-screen reference: every variable available in every template, plus what to add).
+
+> **Seed data note:** the `seed_demo` management command lives on its own `dev-fixtures` branch. Run `python manage.py seed_demo` (after `dev-fixtures` lands on main) before doing design work — empty screens look wrong even when the design is right.
 
 ## Scope: polish what exists
 
@@ -55,20 +57,9 @@ Two helpers are explicitly deferred from the `credit-cards` Decisions bullet to 
 
 3. **Tests:** `assets − debt` math; debt accounts are subtracted (not added); empty case returns 0.
 
-## Seed data (commit #2)
+## Seed data — separate branch
 
-Realistic seed data is critical — empty screens look wrong even when the design is right.
-
-Add a `python manage.py seed_demo` management command that:
-
-- Creates a demo user (or uses `--username` flag), with Personal Space auto-attached via the existing post_save signal.
-- Creates 3-4 accounts: 1 checking, 1 high-yield savings, 1-2 credit cards (different institutions).
-- Creates 8-12 months of varied transactions: paychecks, recurring bills (rent, utilities, subscriptions), groceries, dining, entertainment, transfers between owned accounts (`is_savings_transfer=True`), card-swipe spending, card payments.
-- Creates 3-5 goals with mixed progress and `basket_percent` summing to 100.
-- Idempotent (running twice doesn't duplicate; safe to re-run).
-- Use realistic merchant names + amounts so screens don't look stock.
-
-Reset between iterations with `manage.py flush`.
+Seed data lives on the **`dev-fixtures` branch** (own branch + chat, lands on `main` first). Once `python manage.py seed_demo` is on main, rebase this branch and run it before starting design work. Reset between iterations with `manage.py flush && python manage.py seed_demo`.
 
 ## IA changes
 
