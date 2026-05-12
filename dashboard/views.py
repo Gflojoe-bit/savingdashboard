@@ -19,6 +19,54 @@ from goals.models import Goal, period_savings
 from transactions.models import Transaction
 
 
+CATEGORY_ICONS = {
+    "FOOD_AND_DRINK": "🍔",
+    "GENERAL_MERCHANDISE": "🛍",
+    "TRANSPORTATION": "🚗",
+    "TRAVEL": "✈️",
+    "RENT_AND_UTILITIES": "🏠",
+    "HOUSING": "🏠",
+    "ENTERTAINMENT": "🎬",
+    "PERSONAL_CARE": "💆",
+    "MEDICAL": "💊",
+    "HEALTH": "💊",
+    "INCOME": "💰",
+    "GENERAL_SERVICES": "🧰",
+    "GOVERNMENT_AND_NON_PROFIT": "🏛",
+    "LOAN_PAYMENTS": "💳",
+    "BANK_FEES": "🏦",
+    "GROCERIES": "🛒",
+    "DINING": "🍔",
+    "GAS": "⛽",
+    "UTILITIES": "💡",
+    "SUBSCRIPTIONS": "📱",
+    "STREAMING": "📺",
+}
+
+CATEGORY_TINTS = [
+    "#fdeeed",
+    "#e8f5ec",
+    "#e8f0fb",
+    "#fff4e0",
+    "#f3eeff",
+    "#fef3e0",
+    "#eaf6f6",
+    "#f1f1f1",
+]
+
+ACCOUNT_TINTS = {
+    Account.CHECKING: "#e8f0fb",
+    Account.SAVINGS: "#e8f5ec",
+    Account.CREDIT: "#fdeeed",
+}
+
+ACCOUNT_ICONS = {
+    Account.CHECKING: "🏦",
+    Account.SAVINGS: "🏛",
+    Account.CREDIT: "💳",
+}
+
+
 def _format_delta(value):
     """Format a Decimal as '+$140.00' or '−$50.00' for display.
 
@@ -180,15 +228,132 @@ def _savings_over_time(base_qs, today=None):
     return {"labels": labels, "values": values}
 
 
+def _account_rows(accounts_qs, base_qs, today=None):
+    """Per-account expandable row data: MTD income/spending + 3 most-recent txns.
+
+    Done in two passes (one MTD aggregation, one .order_by limited fetch
+    per account) — fine at the hundreds-of-accounts scale this app sees.
+    """
+    today = today or date.today()
+    start = today.replace(day=1)
+
+    rows = []
+    for acct in accounts_qs:
+        acct_txns = base_qs.filter(account=acct)
+        mtd = acct_txns.operational().in_range(start, today).summary()
+        recent = list(
+            acct_txns.select_related("account").order_by("-date", "-created_at")[:3]
+        )
+        rows.append({
+            "account": acct,
+            "icon": ACCOUNT_ICONS.get(acct.type, "🏦"),
+            "tint": ACCOUNT_TINTS.get(acct.type, "#f1f1f1"),
+            "mtd_income": mtd["income"],
+            "mtd_spending": mtd["spending"],
+            "recent": recent,
+        })
+    return rows
+
+
+def _monthly_bars(base_qs, today=None, months=6):
+    """Income vs spending bucketed by calendar month for the last N months.
+
+    Returns {labels, income, spending, max} ready for a simple bar chart.
+    """
+    today = today or date.today()
+    year, month = today.year, today.month
+    buckets = []
+    for _ in range(months):
+        buckets.append((year, month))
+        if month == 1:
+            year, month = year - 1, 12
+        else:
+            month -= 1
+    buckets.reverse()
+
+    labels = []
+    income_vals = []
+    spending_vals = []
+    for (y, m) in buckets:
+        start = date(y, m, 1)
+        end = date(y, m, calendar.monthrange(y, m)[1])
+        summary = base_qs.operational().in_range(start, end).summary()
+        labels.append(calendar.month_abbr[m])
+        income_vals.append(float(summary["income"]))
+        spending_vals.append(float(summary["spending"]))
+    peak = max(income_vals + spending_vals + [0.0])
+    bars = []
+    for i, label in enumerate(labels):
+        bars.append({
+            "label": label,
+            "income": income_vals[i],
+            "spending": spending_vals[i],
+            "income_pct": int(round((income_vals[i] / peak) * 100)) if peak > 0 else 0,
+            "spending_pct": int(round((spending_vals[i] / peak) * 100)) if peak > 0 else 0,
+        })
+    return {
+        "labels": labels,
+        "income": income_vals,
+        "spending": spending_vals,
+        "max": peak,
+        "bars": bars,
+    }
+
+
+def _category_breakdown(base_qs, today=None, limit=8):
+    """MTD spending grouped by Transaction.category (negative-amount rows only).
+
+    Each row carries the contributing transactions so the UI can expand
+    inline (similar to the accounts list). Empty `category` rolls up under
+    "Uncategorized". Returns rows ordered by amount desc.
+    """
+    today = today or date.today()
+    start = today.replace(day=1)
+
+    grouped = (
+        base_qs.operational()
+        .in_range(start, today)
+        .filter(amount__lt=0)
+        .values("category")
+        .annotate(total=Sum("amount"))
+        .order_by("total")
+    )
+
+    grand_total = sum((-r["total"] for r in grouped), Decimal(0))
+    if grand_total == 0:
+        return {"rows": [], "total": Decimal(0)}
+
+    out = []
+    for i, r in enumerate(list(grouped)[:limit]):
+        amount = -r["total"]
+        raw = r["category"] or ""
+        name = (raw or "Uncategorized")
+        pct = int((amount / grand_total) * 100) if grand_total > 0 else 0
+        txns = (
+            base_qs.operational()
+            .in_range(start, today)
+            .filter(amount__lt=0, category=raw)
+            .select_related("account")
+            .order_by("-date", "-created_at")
+        )
+        out.append({
+            "slug": f"cat-{i}",
+            "name": name.replace("_", " ").title(),
+            "raw_category": raw,
+            "amount": amount,
+            "pct": pct,
+            "icon": CATEGORY_ICONS.get(name.upper(), "•"),
+            "tint": CATEGORY_TINTS[i % len(CATEGORY_TINTS)],
+            "transactions": list(txns),
+        })
+    return {"rows": out, "total": grand_total}
+
+
 @login_required
 def home(request):
     space = current_space(request.user)
     base_qs = space.transactions_qs() if space else Transaction.objects.none()
 
-    recent = (
-        base_qs.select_related("account")
-        .order_by("-date", "-created_at")[:3]
-    )
     savings_total = base_qs.aggregate(s=Sum("amount"))["s"] or Decimal(0)
     goals = Goal.objects.filter(owner=request.user)
     goal_rows = [
@@ -206,8 +371,10 @@ def home(request):
         'charged_to_cards': _charged_to_cards(base_qs),
         'savings_goal_periods': _savings_goal_periods(base_qs, request.user),
         'savings_series': _savings_over_time(base_qs),
+        'monthly_bars': _monthly_bars(base_qs),
+        'category_breakdown': _category_breakdown(base_qs),
         'goal_rows': goal_rows,
-        'recent_transactions': recent,
+        'account_rows': _account_rows(accounts_qs, base_qs),
         'accounts': accounts_qs,
     })
 

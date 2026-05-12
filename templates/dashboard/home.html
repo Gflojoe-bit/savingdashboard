@@ -2,51 +2,57 @@
 
 {% block title %}Home — Savings Dashboard{% endblock %}
 
-{% block header %}
-  <header class="page-header">
-    <h1 class="app-title">Savings Dashboard</h1>
-    <a href="{% url 'dashboard:settings' %}">Settings</a>
-  </header>
-{% endblock %}
+{% block header %}{% endblock %}
 
 {% block content %}
 
-  <!-- Summary: 2x2 tile grid -->
-  <div class="summary-grid">
+  <!-- SUMMARY TILES — 2x2: Income / Spending / Savings (hero) / Goal -->
+  <div class="summary-grid summary-grid-2x2">
     <div class="summary-card">
-      <p class="summary-label">Income</p>
-      <div class="summary-value">${{ month_summary.income|floatformat:2 }}</div>
-      {% if month_summary.has_delta %}
-        <p class="summary-delta">{{ month_summary.income_delta_display }} vs last month</p>
-      {% endif %}
-      <p class="summary-sub">{{ month_summary.label }}</p>
-    </div>
-    <div class="summary-card">
-      <p class="summary-label">Spending</p>
-      <div class="summary-value">${{ month_summary.spending|floatformat:2 }}</div>
-      {% if month_summary.has_delta %}
-        <p class="summary-delta">{{ month_summary.spending_delta_display }} vs last month</p>
-      {% endif %}
-      <p class="summary-sub">{{ month_summary.label }}</p>
-    </div>
-    <div class="summary-card">
-      <p class="summary-label">Savings</p>
-      <div class="summary-value">{% if month_summary.savings < 0 %}−${{ month_summary.savings|floatformat:"-2"|slice:"1:" }}{% else %}${{ month_summary.savings|floatformat:2 }}{% endif %}</div>
-      {% if month_summary.has_delta %}
-        <p class="summary-delta">{{ month_summary.savings_delta_display }} vs last month</p>
-      {% endif %}
-      <p class="summary-sub">{{ month_summary.label }}</p>
+      <div class="summary-label">Income</div>
+      <div class="summary-value">${{ month_summary.income|floatformat:0 }}</div>
+      <div class="summary-sub">
+        {% if month_summary.has_delta %}
+          <span class="badge {% if month_summary.income_delta >= 0 %}badge-up{% else %}badge-down{% endif %}">{{ month_summary.income_delta_display }}</span>
+          <span>vs last month</span>
+        {% else %}
+          <span>{{ month_summary.label }}</span>
+        {% endif %}
+      </div>
     </div>
 
-    <!-- Goal bar tile — rolling 1W / 1M / 3M toggle, progress-to-goal display. -->
+    <div class="summary-card">
+      <div class="summary-label">Spending</div>
+      <div class="summary-value">${{ month_summary.spending|floatformat:0 }}</div>
+      <div class="summary-sub">
+        {% if month_summary.has_delta %}
+          <span class="badge {% if month_summary.spending_delta <= 0 %}badge-up{% else %}badge-down{% endif %}">{{ month_summary.spending_delta_display }}</span>
+          <span>vs last month</span>
+        {% else %}
+          <span>{{ month_summary.label }}</span>
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="summary-card hero">
+      <div class="summary-label">Savings</div>
+      <div class="summary-value">{% if month_summary.savings < 0 %}−${{ month_summary.savings|floatformat:"-0"|slice:"1:" }}{% else %}${{ month_summary.savings|floatformat:0 }}{% endif %}</div>
+      <div class="summary-sub">
+        {% if month_summary.has_delta %}
+          <span class="badge badge-hero">{{ month_summary.savings_delta_display }} vs last month</span>
+        {% else %}
+          <span>{{ month_summary.label }}</span>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Rolling goal tile — 1W / 1M / 3M progress-to-target -->
     <div class="summary-card goal-tile" data-active-period="month">
       <div class="goal-tile-toggle">
         {% for period in savings_goal_periods %}
           <button type="button"
                   class="period-btn {% if period.key == 'month' %}active{% endif %}"
-                  data-period="{{ period.key }}">
-            {{ period.label }}
-          </button>
+                  data-period="{{ period.key }}">{{ period.label }}</button>
         {% endfor %}
       </div>
       {% for period in savings_goal_periods %}
@@ -61,7 +67,7 @@
   </div>
 
   <script>
-    // Toggle rolling 1W / 1M / 3M periods inside the goal tile — placeholder UI.
+    // Rolling period toggle inside the goal tile.
     document.querySelectorAll('.goal-tile').forEach(function (tile) {
       tile.querySelectorAll('.period-btn').forEach(function (btn) {
         btn.addEventListener('click', function () {
@@ -77,78 +83,117 @@
     });
   </script>
 
-  <!-- Accounts — tabular -->
+  <!-- ACCOUNTS: expandable rows -->
   <section>
-    <h2>Accounts</h2>
-    <table class="accounts-table">
-      <colgroup>
-        <col>
-        <col class="col-type">
-        <col class="col-balance">
-        <col class="col-chev">
-      </colgroup>
-      <thead>
-        <tr>
-          <th>Account</th>
-          <th class="cell-type">Type</th>
-          <th class="right">Balance</th>
-          <th></th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for acct in accounts %}
-          <tr>
-            <td>
-              <a href="{% url 'dashboard:account_detail' acct.id %}">
-                <span class="acct-name">{{ acct.name }}</span>
-                <span class="acct-type-inline">{{ acct.get_type_display }}</span>
-              </a>
-            </td>
-            <td class="cell-type">{{ acct.get_type_display }}</td>
-            <td class="right">${{ acct.current_balance }}</td>
-            <td class="right"><a href="{% url 'dashboard:account_detail' acct.id %}" class="chev">›</a></td>
-          </tr>
-        {% endfor %}
-      </tbody>
-    </table>
-    <a href="{% url 'dashboard:accounts' %}" class="view-all">View all accounts →</a>
-  </section>
-
-  <!-- Recent transactions -->
-  <section>
-    <h2>Recent transactions</h2>
-    <ul class="list">
-      {% for txn in recent_transactions %}
-        <li>
-          <div class="row">
-            <div class="row-left">
-              <span class="row-main">{{ txn.description|default:txn.merchant|default:"(no description)" }}</span>
-              <span class="row-sub">{{ txn.date|date:"M j, Y" }} · {{ txn.account.name }}</span>
+    <div class="section-header">
+      <span class="section-title">Accounts</span>
+      <a class="section-action" href="{% url 'dashboard:accounts' %}">View all</a>
+    </div>
+    <div class="accounts-table">
+      <div class="table-head">
+        <div class="th">Account</div>
+        <div class="th cell-type">Type</div>
+        <div class="th right">Balance</div>
+        <div class="th"></div>
+      </div>
+      {% for row in account_rows %}
+        <button type="button"
+                class="account-row js-account-toggle"
+                aria-expanded="false"
+                aria-controls="detail-{{ row.account.id }}"
+                data-target="detail-{{ row.account.id }}">
+          <div class="acct-cell">
+            <div class="acct-icon" style="background: {{ row.tint }};">{{ row.icon }}</div>
+            <div class="acct-info">
+              <div class="acct-name">{{ row.account.name }}</div>
+              {% if row.account.institution %}<div class="acct-sub">{{ row.account.institution }}</div>{% endif %}
             </div>
-            <span class="row-right {% if txn.is_credit %}credit{% endif %}">
-              {% if txn.is_credit %}+{% else %}−{% endif %}${{ txn.amount_abs }}
-            </span>
           </div>
-        </li>
+          <div class="cell-type"><span class="acct-type-badge">{{ row.account.get_type_display }}</span></div>
+          <div class="acct-balance {% if row.account.current_balance < 0 %}negative{% endif %}">
+            {% if row.account.current_balance < 0 %}−${{ row.account.current_balance|floatformat:"-2"|slice:"1:" }}{% else %}${{ row.account.current_balance|floatformat:2 }}{% endif %}
+          </div>
+          <div class="chevron">›</div>
+        </button>
+        <div class="detail-panel" id="detail-{{ row.account.id }}" hidden>
+          <div class="detail-grid">
+            <div class="detail-stat">
+              <div class="d-label">This month in</div>
+              <div class="d-value d-green">+${{ row.mtd_income|floatformat:0 }}</div>
+            </div>
+            <div class="detail-stat">
+              <div class="d-label">This month out</div>
+              <div class="d-value d-red">−${{ row.mtd_spending|floatformat:0 }}</div>
+            </div>
+            <div class="detail-stat">
+              <div class="d-label">Starting balance</div>
+              <div class="d-value">${{ row.account.balance|floatformat:0 }}</div>
+            </div>
+            <div class="detail-stat">
+              <div class="d-label">Type</div>
+              <div class="d-value">{{ row.account.get_type_display }}</div>
+            </div>
+          </div>
+          <div class="txn-header">Recent transactions</div>
+          {% for txn in row.recent %}
+            <div class="txn-row">
+              <div>
+                <div class="txn-merchant">{{ txn.description|default:txn.merchant|default:"(no description)" }}</div>
+                <div class="txn-date">{{ txn.date|date:"M j" }}</div>
+              </div>
+              {% if txn.is_credit %}
+                <div class="txn-amt-in">+${{ txn.amount_abs|floatformat:2 }}</div>
+              {% else %}
+                <div class="txn-amt-out">−${{ txn.amount_abs|floatformat:2 }}</div>
+              {% endif %}
+            </div>
+          {% empty %}
+            <div class="empty">No transactions on this account yet.</div>
+          {% endfor %}
+        </div>
       {% empty %}
-        <li class="empty">No transactions yet.</li>
+        <div class="empty">No accounts yet.</div>
       {% endfor %}
-    </ul>
-    <a href="{% url 'transactions:list' %}" class="view-all">View all transactions →</a>
+    </div>
   </section>
 
-  <!-- Savings over time chart — cumulative net savings since day 1.
-       Range buttons filter the visible X-window only; y-axis stays
-       anchored to actual cumulative totals. -->
+  <!-- INCOME vs SPENDING bars + savings-over-time line, stacked -->
   <section>
-    <h2>Savings over time</h2>
-    <div class="chart-tile" data-active-range="90">
-      <div class="chart-range">
-        <button type="button" class="period-btn" data-days="7">1W</button>
-        <button type="button" class="period-btn" data-days="30">1M</button>
-        <button type="button" class="period-btn active" data-days="90">3M</button>
-        <button type="button" class="period-btn" data-days="365">1Y</button>
-        <button type="button" class="period-btn" data-days="all">All</button>
+    <div class="chart-card" style="margin-bottom: 12px;">
+      <div class="chart-top">
+        <span class="section-title">Income vs spending</span>
+        <span class="section-action">Last 6 months</span>
+      </div>
+      {% if monthly_bars.max > 0 %}
+        <div class="bar-chart">
+          {% for bar in monthly_bars.bars %}
+            <div class="bar-group">
+              <div class="bar-wrap">
+                <div class="bar bar-income" style="height: {{ bar.income_pct }}%;"></div>
+                <div class="bar bar-spend" style="height: {{ bar.spending_pct }}%;"></div>
+              </div>
+              <div class="bar-month">{{ bar.label }}</div>
+            </div>
+          {% endfor %}
+        </div>
+        <div class="legend">
+          <div class="legend-item"><span class="legend-dot" style="background: var(--hero);"></span>Income</div>
+          <div class="legend-item"><span class="legend-dot" style="background: var(--hero-soft);"></span>Spending</div>
+        </div>
+      {% else %}
+        <div class="empty">No transactions yet to chart.</div>
+      {% endif %}
+    </div>
+
+    <div class="chart-card">
+      <div class="chart-top">
+        <span class="section-title">Savings over time</span>
+        <div class="period-btns chart-range">
+          <button type="button" class="period-btn" data-days="30">1M</button>
+          <button type="button" class="period-btn active" data-days="90">3M</button>
+          <button type="button" class="period-btn" data-days="365">1Y</button>
+          <button type="button" class="period-btn" data-days="all">All</button>
+        </div>
       </div>
       <div class="chart-canvas-wrap">
         <canvas id="savings-chart"></canvas>
@@ -158,10 +203,81 @@
     {{ savings_series|json_script:"savings-series" }}
   </section>
 
+  <!-- CATEGORY BREAKDOWN -->
+  <section>
+    <div class="section-header">
+      <span class="section-title">Spending by category</span>
+      <span class="section-action">{{ month_summary.label }}</span>
+    </div>
+    <div class="cat-card">
+      {% for cat in category_breakdown.rows %}
+        <button type="button"
+                class="cat-row js-cat-toggle"
+                aria-expanded="false"
+                aria-controls="{{ cat.slug }}"
+                data-target="{{ cat.slug }}">
+          <div class="cat-icon" style="background: {{ cat.tint }};">{{ cat.icon }}</div>
+          <div class="cat-name">{{ cat.name }}</div>
+          <div class="cat-bar-wrap"><div class="cat-bar-fill" style="width: {{ cat.pct }}%;"></div></div>
+          <div class="cat-pct">{{ cat.pct }}%</div>
+          <div class="cat-amt">${{ cat.amount|floatformat:0 }}</div>
+          <div class="cat-chevron">›</div>
+        </button>
+        <div class="cat-detail" id="{{ cat.slug }}" hidden>
+          {% for txn in cat.transactions %}
+            <div class="txn-row">
+              <div>
+                <div class="txn-merchant">{{ txn.description|default:txn.merchant|default:"(no description)" }}</div>
+                <div class="txn-date">{{ txn.date|date:"M j" }} · {{ txn.account.name }}</div>
+              </div>
+              <div class="txn-amt-out">−${{ txn.amount_abs|floatformat:2 }}</div>
+            </div>
+          {% empty %}
+            <div class="empty">No transactions in this category.</div>
+          {% endfor %}
+        </div>
+      {% empty %}
+        <div class="empty">No spending this month yet.</div>
+      {% endfor %}
+    </div>
+  </section>
+
+  <!-- GOALS -->
+  <section>
+    <div class="section-header">
+      <span class="section-title">Goals</span>
+      <a class="section-action" href="{% url 'goals:list' %}">View all</a>
+    </div>
+    <div class="goals-card">
+      {% for row in goal_rows %}
+        <div class="goal-item">
+          <div class="goal-row">
+            <span class="goal-name">{{ row.goal.name }}</span>
+            <span class="goal-amounts">${{ row.saved|floatformat:0 }} of ${{ row.goal.target_amount|floatformat:0 }}</span>
+          </div>
+          <progress value="{{ row.saved }}" max="{{ row.goal.target_amount }}"></progress>
+        </div>
+      {% empty %}
+        <div class="empty">No goals yet.</div>
+      {% endfor %}
+    </div>
+  </section>
+
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
   <script>
-    // Cumulative net savings line. Data is full-history; range buttons
-    // slice the tail — y-axis auto-fits to the visible slice.
+    // Expand/collapse rows (accounts + categories share the same pattern).
+    document.querySelectorAll('.js-account-toggle, .js-cat-toggle').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        var targetId = btn.dataset.target;
+        var panel = document.getElementById(targetId);
+        if (!panel) return;
+        var open = btn.getAttribute('aria-expanded') === 'true';
+        btn.setAttribute('aria-expanded', open ? 'false' : 'true');
+        panel.hidden = open;
+      });
+    });
+
+    // Savings over time — cumulative line. Range buttons slice the tail.
     (function () {
       var raw = document.getElementById('savings-series');
       if (!raw) return;
@@ -181,12 +297,12 @@
           labels: data.labels,
           datasets: [{
             data: data.values,
-            borderColor: '#111',
-            backgroundColor: 'rgba(17,17,17,0.06)',
+            borderColor: '#0f1a2e',
+            backgroundColor: 'rgba(15, 26, 46, 0.06)',
             borderWidth: 2,
             pointRadius: 0,
             pointHoverRadius: 4,
-            tension: 0.15,
+            tension: 0.2,
             fill: true,
           }]
         },
@@ -197,16 +313,14 @@
           plugins: {
             legend: { display: false },
             tooltip: {
-              callbacks: {
-                label: function (ctx) { return fmt(ctx.parsed.y); }
-              }
+              callbacks: { label: function (ctx) { return fmt(ctx.parsed.y); } }
             }
           },
           scales: {
             x: { display: false },
             y: {
-              ticks: { callback: fmt, maxTicksLimit: 4 },
-              grid: { color: '#eee' },
+              ticks: { callback: fmt, maxTicksLimit: 4, color: '#aaa', font: { family: 'DM Mono' } },
+              grid: { color: '#f0f0f0', drawBorder: false },
             }
           }
         }
@@ -219,7 +333,6 @@
         chart.data.datasets[0].data = data.values.slice(start);
         chart.update();
       }
-
       setRange('90');
 
       document.querySelectorAll('.chart-range .period-btn').forEach(function (btn) {
@@ -232,24 +345,5 @@
       });
     })();
   </script>
-
-  <!-- Goals -->
-  <section>
-    <h2>Goals</h2>
-    <ul class="list">
-      {% for row in goal_rows %}
-        <li class="goal-item">
-          <div class="goal-row">
-            <span>{{ row.goal.name }}</span>
-            <span>${{ row.saved|floatformat:0 }} of ${{ row.goal.target_amount|floatformat:0 }}</span>
-          </div>
-          <progress value="{{ row.saved }}" max="{{ row.goal.target_amount }}"></progress>
-        </li>
-      {% empty %}
-        <li class="empty">No goals yet.</li>
-      {% endfor %}
-    </ul>
-    <a href="{% url 'goals:list' %}" class="view-all">View all goals →</a>
-  </section>
 
 {% endblock %}

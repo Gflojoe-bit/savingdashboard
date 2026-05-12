@@ -4,9 +4,27 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>{% block title %}Savings Dashboard{% endblock %}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="{% static 'css/app.css' %}">
 </head>
 <body>
+
+  {% if user.is_authenticated %}
+    <nav class="top-nav">
+      <div class="top-nav-inner">
+        <a class="top-nav-brand" href="{% url 'dashboard:home' %}">Savings Dashboard</a>
+        <div class="top-nav-links">
+          <a href="{% url 'dashboard:home' %}" {% if active_tab == 'home' %}class="active"{% endif %}>Home</a>
+          <a href="{% url 'dashboard:accounts' %}" {% if active_tab == 'accounts' %}class="active"{% endif %}>Accounts</a>
+          <a href="{% url 'transactions:list' %}" {% if active_tab == 'transactions' %}class="active"{% endif %}>Transactions</a>
+          <a href="{% url 'goals:list' %}" {% if active_tab == 'goals' %}class="active"{% endif %}>Goals</a>
+        </div>
+        <a class="top-nav-settings" href="{% url 'dashboard:settings' %}">Settings</a>
+      </div>
+    </nav>
+  {% endif %}
 
   {% block header %}
     <header class="page-header">
@@ -19,15 +37,6 @@
   <main>
     {% block content %}{% endblock %}
   </main>
-
-  {% if user.is_authenticated %}
-    <nav class="bottom-nav">
-      <a href="{% url 'dashboard:home' %}" {% if active_tab == 'home' %}class="active"{% endif %}>Home</a>
-      <a href="{% url 'dashboard:accounts' %}" {% if active_tab == 'accounts' %}class="active"{% endif %}>Accounts</a>
-      <a href="{% url 'transactions:list' %}" {% if active_tab == 'transactions' %}class="active"{% endif %}>Transactions</a>
-      <a href="{% url 'goals:list' %}" {% if active_tab == 'goals' %}class="active"{% endif %}>Goals</a>
-    </nav>
-  {% endif %}
 
 </body>
 </html>
